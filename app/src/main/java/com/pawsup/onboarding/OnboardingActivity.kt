@@ -420,7 +420,8 @@ private fun UsageAccessGuideScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0F0A08))
-            .padding(horizontal = 28.dp),
+            .padding(horizontal = 28.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(56.dp))
@@ -473,7 +474,7 @@ private fun UsageAccessGuideScreen(
             active   = activeStep == 2
         )
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(32.dp))
 
         Button(
             onClick  = onOpenSettings,
@@ -524,7 +525,8 @@ private fun OverlayPermissionGuideScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0F0A08))
-            .padding(horizontal = 28.dp),
+            .padding(horizontal = 28.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(56.dp))
@@ -575,7 +577,7 @@ private fun OverlayPermissionGuideScreen(
             active   = activeStep == 2
         )
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(32.dp))
 
         Button(
             onClick  = onOpenSettings,

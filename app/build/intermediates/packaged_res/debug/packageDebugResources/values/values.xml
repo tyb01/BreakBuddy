@@ -54,10 +54,8 @@
     <string name="paywall_dismiss">Maybe later</string>
     <string name="paywall_legal">Renews automatically. Cancel anytime in Play Store.</string>
     <string name="paywall_monthly">Monthly</string>
-    <string name="paywall_subscription_unavailable">This subscription isn\'t available right now</string>
     <string name="paywall_success_body">She\'ll be there next time.</string>
     <string name="paywall_success_title">%1$s is yours now.</string>
-    <string name="paywall_unavailable">Unavailable</string>
     <string name="paywall_yearly">Yearly</string>
     <string name="paywall_yearly_badge">Save 58%</string>
     <string name="recap_pets">%1$d pets given.</string>

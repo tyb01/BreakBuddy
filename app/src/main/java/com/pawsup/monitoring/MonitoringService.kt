@@ -149,6 +149,7 @@ class MonitoringService : Service() {
             .setContentTitle(getString(R.string.notification_monitoring_title))
             .setContentText(getString(R.string.notification_monitoring_body))
             .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
             .setOngoing(true)
             .setSilent(true)
             .setContentIntent(openIntent)

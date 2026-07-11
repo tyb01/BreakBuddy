@@ -57011,6 +57011,7 @@ androidx.compose.foundation.layout.ColumnMeasurePolicy:
 androidx.compose.foundation.layout.ColumnScope:
     public abstract androidx.compose.ui.Modifier align(androidx.compose.ui.Modifier,androidx.compose.ui.BiasAlignment$Horizontal)
     public abstract androidx.compose.ui.Modifier weight(androidx.compose.ui.Modifier,boolean)
+    public static synthetic androidx.compose.ui.Modifier weight$default(androidx.compose.ui.Modifier)
 androidx.compose.foundation.layout.ColumnScopeInstance:
     public final androidx.compose.ui.Modifier align(androidx.compose.ui.Modifier,androidx.compose.ui.BiasAlignment$Horizontal)
 androidx.compose.foundation.layout.CrossAxisAlignment$CenterCrossAxisAlignment

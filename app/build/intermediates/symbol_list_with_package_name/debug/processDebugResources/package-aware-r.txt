@@ -1495,10 +1495,8 @@ string paywall_cta
 string paywall_dismiss
 string paywall_legal
 string paywall_monthly
-string paywall_subscription_unavailable
 string paywall_success_body
 string paywall_success_title
-string paywall_unavailable
 string paywall_yearly
 string paywall_yearly_badge
 string range_end
