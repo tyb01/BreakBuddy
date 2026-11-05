@@ -11,7 +11,8 @@ import javax.inject.Singleton
 
 @Singleton
 class InstalledAppsRepository @Inject constructor(
-    private val pm: PackageManager
+    private val pm: PackageManager,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) {
     private var cachedApps: List<InstalledApp>? = null
     private var cacheTime: Long = 0L
@@ -24,11 +25,14 @@ class InstalledAppsRepository @Inject constructor(
         val result = pm.queryIntentActivities(
             Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0
         )
-            .filter { it.activityInfo.packageName != "com.pawsup" }
-            .map { info ->
+            .filter { it.activityInfo.packageName != context.packageName }
+            .distinctBy { it.activityInfo.packageName }
+            .mapNotNull { info ->
+                runCatching {
                 val pkg = info.activityInfo.packageName
                 val icon = iconCache.get(pkg) ?: info.loadIcon(pm).also { iconCache.put(pkg, it) }
                 InstalledApp(pkg, info.loadLabel(pm).toString(), icon)
+                }.getOrNull()
             }
             .sortedBy { it.displayName.lowercase() }
 

@@ -16,7 +16,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowForward
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.*
@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.pawsup.R
 import com.pawsup.cats.CatRegistry
 import com.pawsup.cats.CatAssetResolver
@@ -53,6 +54,7 @@ class OnboardingActivity : ComponentActivity() {
     @Inject lateinit var catRegistry: CatRegistry
 
     private var currentStep by mutableIntStateOf(0)
+    private var completionStarted = false
 
     private val notifPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -68,28 +70,29 @@ class OnboardingActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        currentStep = savedInstanceState?.getInt("step") ?: 0
+        completionStarted = savedInstanceState?.getBoolean("completion_started") ?: false
         val misoCat = catRegistry.free()
         val act = this
 
         setContent {
             PawsUpTheme {
-                val scope = rememberCoroutineScope()
                 OnboardingFlow(
                     step = currentStep,
                     misoCat = misoCat,
                     onNext = { currentStep++ },
                     onPermissionsComplete = { currentStep++ },
                     onGrantUsageActual = {
-                        act.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                        runCatching { act.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
                     },
                     onGrantOverlay = {
                         // Deep-links directly to PawsUp's overlay toggle — no scrolling needed
-                        act.startActivity(
+                        runCatching { act.startActivity(
                             Intent(
                                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                                 Uri.parse("package:${act.packageName}")
                             )
-                        )
+                        ) }
                     },
                     onGrantNotifications = {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -97,15 +100,14 @@ class OnboardingActivity : ComponentActivity() {
                         }
                     },
                     onFinish = {
-                        scope.launch { prefs.setOnboardingCompleted(true) }
-                        ContextCompat.startForegroundService(
-                            act, Intent(act, MonitoringService::class.java)
-                        )
-                        // Open app picker; when user taps Done, appPickerLauncher
-                        // navigates to Settings and finishes onboarding.
-                        appPickerLauncher.launch(
-                            Intent(act, com.pawsup.apppicker.AppPickerActivity::class.java)
-                        )
+                        if (!completionStarted) {
+                            completionStarted = true
+                            lifecycleScope.launch {
+                                prefs.setCombinedUsage(true)
+                                prefs.setOnboardingCompleted(true)
+                                appPickerLauncher.launch(Intent(act, com.pawsup.apppicker.AppPickerActivity::class.java))
+                            }
+                        }
                     },
                     isUsageGranted  = { act.hasUsagePermission() },
                     isOverlayGranted = { Settings.canDrawOverlays(act) },
@@ -119,6 +121,12 @@ class OnboardingActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt("step", currentStep)
+        outState.putBoolean("completion_started", completionStarted)
+        super.onSaveInstanceState(outState)
     }
 
     private fun hasUsagePermission(): Boolean {
@@ -180,6 +188,8 @@ private fun WelcomeStep(misoCat: com.pawsup.cats.Cat, onNext: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .safeDrawingPadding()
+            .verticalScroll(rememberScrollState())
             .background(Color(0xFF0F0A08))
             .padding(horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -188,7 +198,7 @@ private fun WelcomeStep(misoCat: com.pawsup.cats.Cat, onNext: () -> Unit) {
 
         // Large headline — competitor-inspired layout, brand language
         Text(
-            text = "When you've been\nscrolling too long,\na cat comes to sit\nwith you.",
+            text = stringResource(R.string.onboarding_welcome_body),
             fontFamily = CrimsonTextFamily,
             fontStyle = FontStyle.Italic,
             fontSize = 36.sp,
@@ -230,7 +240,7 @@ private fun WelcomeStep(misoCat: com.pawsup.cats.Cat, onNext: () -> Unit) {
         CatPosterImage(
             cat = misoCat,
             modifier = Modifier
-                .weight(1f)
+                .height(220.dp)
                 .fillMaxWidth()
         )
 
@@ -254,7 +264,7 @@ private fun WelcomeStep(misoCat: com.pawsup.cats.Cat, onNext: () -> Unit) {
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.width(8.dp))
-            Icon(Icons.Rounded.ArrowForward, contentDescription = null, modifier = Modifier.size(20.dp))
+            Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, modifier = Modifier.size(20.dp))
         }
 
         Spacer(Modifier.height(48.dp))
@@ -276,7 +286,7 @@ private fun PermissionsStep(
     var usageOk   by remember { mutableStateOf(isUsageGranted()) }
     var overlayOk by remember { mutableStateOf(isOverlayGranted()) }
     var notifOk   by remember { mutableStateOf(isNotifGranted()) }
-    val allGranted = usageOk && overlayOk && notifOk
+    val allGranted = usageOk
 
     var showUsageGuide   by remember { mutableStateOf(false) }
     var showOverlayGuide by remember { mutableStateOf(false) }
@@ -331,7 +341,7 @@ private fun PermissionsStep(
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            "Three quick permissions and you're set.",
+            "Usage access is required. Notifications and automatic break display are optional.",
             color = Color(0xFFF5ECD7).copy(0.65f),
             fontSize = 15.sp,
             textAlign = TextAlign.Center
@@ -408,7 +418,7 @@ private fun UsageAccessGuideScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    var activeStep by remember { mutableStateOf(0) }
+    var activeStep by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
         while (true) {
             delay(1_800)
@@ -513,7 +523,7 @@ private fun OverlayPermissionGuideScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    var activeStep by remember { mutableStateOf(0) }
+    var activeStep by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
         while (true) {
             delay(1_800)
@@ -705,6 +715,9 @@ private fun PermissionRow(
 @Composable
 private fun MeetMisoStep(onFinish: () -> Unit) {
     var showFarewell by remember { mutableStateOf(false) }
+    var completed by remember { mutableStateOf(false) }
+    val finishOnce = { if (!completed) { completed = true; onFinish() } }
+    LaunchedEffect(Unit) { delay(8_000); finishOnce() }
     val scope = rememberCoroutineScope()
 
     Box(
@@ -720,7 +733,7 @@ private fun MeetMisoStep(onFinish: () -> Unit) {
                 showFarewell = true
                 scope.launch {
                     delay(2_000)
-                    onFinish()
+                    finishOnce()
                 }
             }
         )

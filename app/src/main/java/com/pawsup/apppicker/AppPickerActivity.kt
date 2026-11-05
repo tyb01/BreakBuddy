@@ -8,6 +8,8 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
@@ -102,7 +104,7 @@ private fun AppRow(app: InstalledApp, monitored: Boolean, onToggle: () -> Unit) 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onToggle)
+            .toggleable(value = monitored, role = Role.Switch, onValueChange = { onToggle() })
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -113,7 +115,7 @@ private fun AppRow(app: InstalledApp, monitored: Boolean, onToggle: () -> Unit) 
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f)
         )
-        Switch(checked = monitored, onCheckedChange = { onToggle() })
+        Switch(checked = monitored, onCheckedChange = null)
     }
 }
 

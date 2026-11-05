@@ -1,0 +1,74 @@
+{
+  "android.permission.PACKAGE_USAGE_STATS": {
+    "owner": "app",
+    "feature": "Selected-app usage event observation",
+    "request": "Usage access settings, explained in setup; required only for monitoring",
+    "denied": "Monitoring cannot start; settings, cats and test breaks remain available",
+    "versions": "API 24+",
+    "reference": "https://developer.android.com/reference/android/app/usage/UsageStatsManager"
+  },
+  "android.permission.SYSTEM_ALERT_WINDOW": {
+    "owner": "app",
+    "feature": "Optional background break activity presentation exemption",
+    "request": "Optional display-over-apps settings",
+    "denied": "Tap notification to open the break; no automatic display guarantee",
+    "versions": "API 24+",
+    "reference": "https://developer.android.com/guide/components/activities/background-starts"
+  },
+  "android.permission.FOREGROUND_SERVICE": {
+    "owner": "app",
+    "feature": "Visible user-started monitoring service",
+    "request": "Normal permission; enabled by user action",
+    "denied": "Start failure shown; user can retry",
+    "versions": "API 28+",
+    "reference": "https://developer.android.com/develop/background-work/services/fgs"
+  },
+  "android.permission.FOREGROUND_SERVICE_SPECIAL_USE": {
+    "owner": "app",
+    "feature": "Monitoring not described by standard FGS types; manifest subtype explanation",
+    "request": "Normal permission; Play declaration/review required before release",
+    "denied": "Service unavailable; no restart bypass",
+    "versions": "API 34+",
+    "reference": "https://developer.android.com/develop/background-work/services/fgs/service-types#special-use"
+  },
+  "android.permission.POST_NOTIFICATIONS": {
+    "owner": "app",
+    "feature": "Visible status/actions and tap-to-open reminders",
+    "request": "Optional contextual runtime prompt in setup; settings repair",
+    "denied": "No notification reminder; FGS task-manager notice still follows Android behavior",
+    "versions": "API 33+",
+    "reference": "https://developer.android.com/develop/ui/views/notifications/notification-permission"
+  },
+  "com.android.vending.BILLING": {
+    "owner": "app + Play Billing 8",
+    "feature": "Cat subscriptions/restore via Play",
+    "request": "Normal manifest permission, no runtime prompt",
+    "denied": "Paid purchase unavailable, free features available",
+    "versions": "All supported",
+    "reference": "https://developer.android.com/google/play/billing/integrate"
+  },
+  "android.permission.INTERNET": {
+    "owner": "Play Billing -> transport-backend-cct",
+    "feature": "Retained Google Billing transport networking, visible in merger report; no app backend",
+    "request": "Normal permission, no runtime prompt",
+    "denied": "Billing unavailable; bounded cached access only",
+    "versions": "All supported",
+    "reference": "https://developer.android.com/google/play/billing/integrate"
+  },
+  "android.permission.ACCESS_NETWORK_STATE": {
+    "owner": "Media3 + Play Billing transport dependencies",
+    "feature": "Library connectivity observation for retained Billing transport; local cat media needs no network",
+    "request": "Normal permission, no runtime prompt",
+    "denied": "Library connectivity handling unavailable",
+    "versions": "All supported",
+    "reference": "https://developer.android.com/google/play/billing/integrate"
+  },
+  "${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION": {
+    "owner": "AndroidX Core",
+    "feature": "Signature protection for private dynamically registered receivers",
+    "request": "Signature permission, no runtime prompt",
+    "denied": "Other apps cannot send to protected receivers",
+    "versions": "Compatibility support on older Android",
+    "reference": "https://developer.android.com/develop/background-work/background-tasks/broadcasts"
+  }
+}

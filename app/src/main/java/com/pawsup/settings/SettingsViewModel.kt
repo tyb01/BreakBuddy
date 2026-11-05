@@ -26,14 +26,15 @@ data class SettingsUiState(
     val usagePermGranted: Boolean = false,
     val overlayPermGranted: Boolean = false,
     val notifPermGranted: Boolean = false,
-    val monitorMeEnabled: Boolean = true
+    val monitorMeEnabled: Boolean = false
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val prefs: UserPreferences,
+    val prefs: UserPreferences,
     private val catRegistry: CatRegistry,
     private val billingRepo: BillingRepository,
+    val monitoring: com.pawsup.monitoring.MonitoringRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -50,7 +51,7 @@ class SettingsViewModel @Inject constructor(
                 combine(billingRepo.entitlements, prefs.monitorMeEnabled) { e, m -> Pair(e, m) }
             ) { catId, maxMin, breakMin, monitored, (entitlements, monitorMe) ->
                 SettingsUiState(
-                    activeCat = catRegistry.find(catId),
+                    activeCat = catRegistry.find(if (entitlements.owns(catId)) catId else "miso"),
                     visitLimitMin = maxMin,
                     breakDurationMin = breakMin,
                     monitoredCount = monitored.size,
@@ -73,26 +74,38 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setActiveCat(catId: String) {
-        viewModelScope.launch { prefs.setActiveCatId(catId) }
+        viewModelScope.launch { if (state.value.entitlements.owns(catId)) prefs.setActiveCatId(catId) }
     }
 
     fun setMonitorMe(enabled: Boolean, context: android.content.Context) {
         viewModelScope.launch {
+            if (enabled && prefs.snapshotMonitoredPackages().isEmpty()) {
+                monitoring.status.value = "Choose apps before starting monitoring."
+                return@launch
+            }
             prefs.setMonitorMeEnabled(enabled)
             val intent = android.content.Intent(context, com.pawsup.monitoring.MonitoringService::class.java)
             if (enabled) {
-                androidx.core.content.ContextCompat.startForegroundService(context, intent)
-                com.pawsup.monitoring.WatchdogWorker.enqueue(context)
-                com.pawsup.monitoring.AlarmScheduler.schedule(context)
+                com.pawsup.monitoring.MonitoringAccess.start(context, monitoring)
             } else {
                 context.stopService(intent)
-                com.pawsup.monitoring.WatchdogWorker.cancel(context)
-                com.pawsup.monitoring.AlarmScheduler.cancel(context)
             }
         }
     }
 
+    val health = flow {
+        while (true) {
+            val stale = monitoring.isServiceRunning && monitoring.lastPollElapsed > 0 &&
+                android.os.SystemClock.elapsedRealtime() - monitoring.lastPollElapsed > 10_000
+            emit(if (stale) "Monitoring status is stale. Stop and resume to retry." else monitoring.status.value)
+            kotlinx.coroutines.delay(1_000)
+        }
+    }
+    val billingMessage = billingRepo.message
+    fun restorePurchases() = billingRepo.refresh()
+
     fun refreshPermissions() {
+        billingRepo.refresh()
         _state.update { it.copy(
             usagePermGranted = hasUsagePermission(),
             overlayPermGranted = Settings.canDrawOverlays(context),
@@ -112,9 +125,6 @@ class SettingsViewModel @Inject constructor(
     }
 
     private fun hasNotifPermission(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) ==
-                android.content.pm.PackageManager.PERMISSION_GRANTED
-        } else true
+        return androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()
     }
 }

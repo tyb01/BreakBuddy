@@ -1,0 +1,71 @@
+{
+  "verified_date": "2026-11-05",
+  "branch": "fix/production-readiness",
+  "gradle_result": "BUILD SUCCESSFUL",
+  "unit_tests": {
+    "debug": {
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "release": {
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "lint": {
+    "debug": {
+      "severity_counts": {
+        "Warning": 45
+      },
+      "issue_counts": {
+        "ImplicitSamInstance": 1,
+        "GradleDependency": 14,
+        "UnusedResources": 3,
+        "IconLauncherShape": 10,
+        "IconDipSize": 2,
+        "IconLocation": 1,
+        "IconDuplicates": 1,
+        "UseKtx": 13
+      }
+    },
+    "release": {
+      "severity_counts": {
+        "Warning": 45
+      },
+      "issue_counts": {
+        "ImplicitSamInstance": 1,
+        "GradleDependency": 14,
+        "UnusedResources": 3,
+        "IconLauncherShape": 10,
+        "IconDipSize": 2,
+        "IconLocation": 1,
+        "IconDuplicates": 1,
+        "UseKtx": 13
+      }
+    }
+  },
+  "artifacts": {
+    "app/build/outputs/apk/debug/app-debug.apk": {
+      "bytes": 70996351,
+      "sha256": "9cfceb128e90c9486055cb2b68d635cdfe7000e22f5b4889dbd9910bce362e56"
+    },
+    "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": {
+      "bytes": 365121,
+      "sha256": "a099b3e5abd153d95964c05c24f5172137a8b89f538049a3cd3962618c19befc"
+    },
+    "app/build/outputs/bundle/release/app-release.aab": {
+      "bytes": 55069019,
+      "sha256": "1427c6d8c4e03e023be48acb1ec7e78d99469817c955976559d9344f16e48ab7"
+    }
+  },
+  "limitations": [
+    "Device integration tests compiled, not executed",
+    "No connected device or installed emulator at inventory",
+    "Release AAB unsigned; not for publication",
+    "No Play or GitHub workflow execution"
+  ]
+}

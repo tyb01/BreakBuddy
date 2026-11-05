@@ -47,7 +47,7 @@ class PaywallActivity : ComponentActivity() {
 
                 if (state.purchaseSuccess) {
                     PurchaseSuccessScreen(
-                        catName = state.cat?.displayName ?: "",
+                        catName = if (state.bundleSuccess) "the whole cafe" else state.cat?.displayName ?: "",
                         onDone = { finish() }
                     )
                 } else {
@@ -56,12 +56,15 @@ class PaywallActivity : ComponentActivity() {
                         onPeriodChange = vm::setPeriod,
                         onAdoptCat = { vm.adoptCat(this) },
                         onAdoptCafe = { vm.adoptCafe(this) },
-                        onDismiss = { finish() }
+                        onDismiss = { finish() },
+                        onRestore = vm::refresh
                     )
                 }
             }
         }
     }
+
+    override fun onResume() { super.onResume(); vm.refresh() }
 
     companion object {
         const val EXTRA_CAT_ID = "cat_id"
@@ -74,7 +77,8 @@ private fun PaywallScreen(
     onPeriodChange: (PricePeriod) -> Unit,
     onAdoptCat: () -> Unit,
     onAdoptCafe: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onRestore: () -> Unit
 ) {
     val cat = state.cat ?: return
     val context = LocalContext.current
@@ -82,6 +86,7 @@ private fun PaywallScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .safeDrawingPadding()
             .background(Color(0xFF0F0A08))
             .verticalScroll(rememberScrollState())
     ) {
@@ -153,22 +158,7 @@ private fun PaywallScreen(
                 FilterChip(
                     selected = state.period == PricePeriod.YEARLY,
                     onClick = { onPeriodChange(PricePeriod.YEARLY) },
-                    label = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(stringResource(R.string.paywall_yearly))
-                            Spacer(Modifier.width(4.dp))
-                            Surface(
-                                color = MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(4.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.paywall_yearly_badge),
-                                    fontSize = 10.sp,
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-                    }
+                    label = { Text(stringResource(R.string.paywall_yearly)) }
                 )
             }
 
@@ -178,6 +168,7 @@ private fun PaywallScreen(
             PurchaseCard(
                 title = stringResource(R.string.paywall_adopt_one, cat.displayName),
                 price = state.catPrice,
+                enabled = state.catAvailable && !state.isLoading,
                 onClick = onAdoptCat
             )
 
@@ -188,11 +179,20 @@ private fun PaywallScreen(
                 title = stringResource(R.string.paywall_adopt_all),
                 subtitle = stringResource(R.string.paywall_adopt_all_subtitle),
                 price = state.cafePrice,
+                enabled = state.cafeAvailable && !state.isLoading,
                 onClick = onAdoptCafe
             )
 
             Spacer(Modifier.height(24.dp))
 
+            Text(state.message, color = Color.White)
+            if (state.isLoading) CircularProgressIndicator()
+            TextButton(onClick = onRestore) { Text(stringResource(com.pawsup.R.string.production_restore_purchases_retry_extra)) }
+            TextButton(onClick = {
+                runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://play.google.com/store/account/subscriptions"))) }
+            }) { Text(stringResource(com.pawsup.R.string.production_manage_subscriptions_in_google_play)) }
+            Text(stringResource(com.pawsup.R.string.production_subscriptions_renew_automatically_unless_cancelled_in_google_play), color = Color.White)
             // Dismiss
             TextButton(
                 onClick = onDismiss,
@@ -220,12 +220,13 @@ private fun PurchaseCard(
     title: String,
     price: String,
     onClick: () -> Unit,
+    enabled: Boolean,
     subtitle: String? = null
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(enabled = enabled, onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF2A1F1A)),
         shape = RoundedCornerShape(16.dp)
     ) {
@@ -254,6 +255,7 @@ private fun PurchaseSuccessScreen(catName: String, onDone: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .safeDrawingPadding()
             .background(Color(0xFF0F0A08)),
         contentAlignment = Alignment.Center
     ) {
@@ -274,7 +276,7 @@ private fun PurchaseSuccessScreen(catName: String, onDone: () -> Unit) {
             )
             Spacer(Modifier.height(32.dp))
             Button(onClick = onDone) {
-                Text("Continue")
+                Text(stringResource(com.pawsup.R.string.production_continue))
             }
         }
     }

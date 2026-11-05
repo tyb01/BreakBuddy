@@ -18,16 +18,14 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject lateinit var prefs: UserPreferences
+    @Inject lateinit var monitoring: com.pawsup.monitoring.MonitoringRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch {
             val onboardingDone = prefs.onboardingCompleted.first()
             if (onboardingDone && prefs.snapshotMonitorMeEnabled()) {
-                ContextCompat.startForegroundService(
-                    this@MainActivity,
-                    Intent(this@MainActivity, MonitoringService::class.java)
-                )
+                com.pawsup.monitoring.MonitoringAccess.start(this@MainActivity, monitoring)
             }
             val target = if (onboardingDone) SettingsActivity::class.java
                          else OnboardingActivity::class.java
