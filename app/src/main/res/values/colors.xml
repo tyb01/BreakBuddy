@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_bg">#2B1F2E</color>
     <color name="ic_launcher_background">#2B1F2E</color>
-    <color name="color_background_dark">#0F0A08</color>
-    <color name="color_background_warm">#2A1F1A</color>
-    <color name="color_text_cream">#F5ECD7</color>
-    <color name="color_miso_mood">#E8A87C</color>
 </resources>

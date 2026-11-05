@@ -1,7 +1,3 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <plurals name="notif_break_body_minutes">
-        <item quantity="one">%1$s suggests about %2$d minute to reset — or leave the app to continue.</item>
-        <item quantity="other">%1$s suggests about %2$d minutes to reset — or leave the app to continue.</item>
-    </plurals>
 </resources>

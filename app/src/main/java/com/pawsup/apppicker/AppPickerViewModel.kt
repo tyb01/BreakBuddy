@@ -51,9 +51,7 @@ class AppPickerViewModel @Inject constructor(
 
     fun toggleMonitored(packageName: String) {
         viewModelScope.launch {
-            val current = _state.value.monitoredPackages.toMutableSet()
-            if (packageName in current) current.remove(packageName) else current.add(packageName)
-            prefs.setMonitoredPackages(current)
+            prefs.togglePackage(packageName)
         }
     }
 }

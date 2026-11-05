@@ -30,6 +30,7 @@ fun VideoPlayerCompositor(
     DisposableEffect(assetPath) {
         if (onVideoEnd != null) {
             val listener = object : Player.Listener {
+                override fun onPlayerError(error: androidx.media3.common.PlaybackException) { onVideoEnd() }
                 override fun onPlaybackStateChanged(state: Int) {
                     if (state == Player.STATE_ENDED) onVideoEnd()
                 }
@@ -41,11 +42,20 @@ fun VideoPlayerCompositor(
         }
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(exoPlayer) {
         playerRef?.invoke(exoPlayer)
         onDispose { exoPlayer.release() }
     }
 
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(exoPlayer, lifecycle) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_STOP) exoPlayer.pause()
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_START) exoPlayer.play()
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
     AndroidView(
         factory = { ctx ->
             PlayerView(ctx).apply {
@@ -68,7 +78,8 @@ private fun rememberExoPlayer(
         val uri = Uri.parse("asset:///$assetPath")
         setMediaItem(MediaItem.fromUri(uri))
         repeatMode = if (loop) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
-        playWhenReady = true
+        volume = 0f
+            playWhenReady = true
         prepare()
     }
 }

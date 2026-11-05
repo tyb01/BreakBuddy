@@ -2,3 +2,10 @@ PLAN.md
 
 # Machine-specific SDK path (Android Studio / Gradle)
 local.properties
+.gradle/
+**/build/
+keystore.properties
+*.jks
+*.keystore
+.idea/
+*.log

@@ -1,210 +1,115 @@
 package com.pawsup.break_experience
 
+import android.os.SystemClock
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import android.os.SystemClock
-import com.pawsup.cats.Cat
-import com.pawsup.cats.CatRegistry
-import com.pawsup.cats.CatVoiceProvider
+import com.pawsup.cats.*
 import com.pawsup.data.UserPreferences
+import com.pawsup.monitoring.MonitoringRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import javax.inject.Inject
+import org.json.JSONObject
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.random.Random
+import javax.inject.Inject
 
 data class BreakUiState(
-    val cat: Cat? = null,
-    val breakState: BreakState = BreakState.Entrance,
-    val remainingSeconds: Int = 0,
-    val currentDialogueLine: String = "",
-    val sessionPetCount: Int = 0,
-    val showPetHint: Boolean = false,
-    val totalBreaks: Int = 0
+    val cat: Cat? = null, val breakState: BreakState = BreakState.Entrance,
+    val remainingSeconds: Int = 0, val currentDialogueLine: String = "",
+    val sessionPetCount: Int = 0, val showPetHint: Boolean = false,
+    val totalBreaks: Int = 0, val reduceMotion: Boolean = false, val sound: Boolean = false
 )
-
 @HiltViewModel
 class BreakOverlayViewModel @Inject constructor(
-    private val prefs: UserPreferences,
-    private val catRegistry: CatRegistry,
-    savedState: SavedStateHandle
+    private val prefs: UserPreferences, private val cats: CatRegistry,
+    private val saved: SavedStateHandle, private val monitoring: MonitoringRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) : ViewModel() {
-
-    private val catId: String = savedState[BreakOverlayActivity.EXTRA_CAT_ID] ?: "miso"
-    private val breakMinutes: Int = savedState[BreakOverlayActivity.EXTRA_BREAK_MINUTES] ?: 2
-
     private val _state = MutableStateFlow(BreakUiState())
-    val state: StateFlow<BreakUiState> = _state.asStateFlow()
-
-    private val _finishEvent = MutableSharedFlow<BreakSummary>(extraBufferCapacity = 1)
-    val finishEvent: SharedFlow<BreakSummary> = _finishEvent.asSharedFlow()
-
-    private var timerJob: Job? = null
-    private var dialogueJob: Job? = null
-    private var guestScheduleJob: Job? = null
-    private var entranceDuration = 5_000L
-    private var outroDuration = 5_000L
-    private var dialogueLines: List<String> = emptyList()
-    private var dialogueIndex = 0
-    private val companionEntered = AtomicBoolean(false)
+    val state = _state.asStateFlow()
+    private val _finish = MutableSharedFlow<BreakSummary>(replay = 1)
+    val finishEvent = _finish.asSharedFlow()
+    private val started = AtomicBoolean(false)
+    private val finished = AtomicBoolean(false)
+    private var id: String = saved.get<String>("session_id") ?: UUID.randomUUID().toString().also { saved["session_id"] = it }
+    private var minutes = (saved.get<Int>(BreakOverlayActivity.EXTRA_BREAK_MINUTES) ?: 2).coerceIn(1, 30)
+    private var deadline = 0L
+    private var timer: Job? = null
+    private var initialization: Job? = null
+    private var startedAt = 0L
 
     fun onEntranceStarted(cat: Cat) {
-        val lines = CatVoiceProvider.getLoopLines(cat.voiceBucket)
-        dialogueLines = lines
-        _state.update { it.copy(
-            cat = cat,
-            currentDialogueLine = CatVoiceProvider.getEntrance(cat.voiceBucket),
-            remainingSeconds = breakMinutes * 60
-        )}
-        viewModelScope.launch {
-            delay(1_000) // spec: entrance line shown at t=1s
-        }
-    }
-
-    fun onEntranceComplete() {
-        if (!companionEntered.compareAndSet(false, true)) return
-        _state.update { it.copy(breakState = BreakState.CompanionLoop) }
-        startCompanionLoop()
-    }
-
-    fun setEntranceDuration(ms: Long) { entranceDuration = ms }
-    fun setOutroDuration(ms: Long) { outroDuration = ms }
-
-    private fun startCompanionLoop() {
-        timerJob?.cancel()
-        dialogueJob?.cancel()
-
-        timerJob = viewModelScope.launch {
-            val totalSeconds = breakMinutes * 60
-            var deadlineElapsed = SystemClock.elapsedRealtime() + totalSeconds * 1_000L
-            var frozenSecondsDuringGuest: Int? = null
-
-            while (true) {
-                val now = SystemClock.elapsedRealtime()
-                val bs = _state.value.breakState
-
-                if (bs is BreakState.Outro || bs is BreakState.Done) return@launch
-
-                if (bs !is BreakState.GuestVisit) {
-                    frozenSecondsDuringGuest?.let { r ->
-                        deadlineElapsed = now + r * 1_000L
-                        frozenSecondsDuringGuest = null
+        if (!started.compareAndSet(false, true)) return
+        initialization = persistenceScope.launch {
+            if (prefs.isBreakFinished(id)) {
+                finished.set(true)
+                _finish.emit(BreakSummary(cat.displayName, minutes, 0, "interrupted"))
+                return@launch
+            }
+            val now = SystemClock.elapsedRealtime()
+            val boot = com.pawsup.monitoring.BootIdentity.read(context)
+            val old = prefs.activeBreak()?.let { runCatching { JSONObject(it) }.getOrNull() }
+            if (old != null && BreakTiming.canRestore(old.getLong("boot"), boot, old.getLong("deadline"), now)) {
+                id = old.getString("id"); deadline = old.getLong("deadline")
+                minutes = old.optInt("minutes", minutes).coerceIn(1, 30)
+                startedAt = old.optLong("started", deadline - minutes * 60_000L)
+            } else {
+                old?.let {
+                    prefs.finishBreak(it.getString("id"), "interrupted", 0)
+                    if (it.getString("id") == id) {
+                        finished.set(true)
+                        _finish.emit(BreakSummary(cat.displayName, minutes, 0, "interrupted"))
+                        return@launch
                     }
                 }
-                if (bs is BreakState.GuestVisit && frozenSecondsDuringGuest == null) {
-                    frozenSecondsDuringGuest =
-                        ((deadlineElapsed - now) / 1_000L).toInt().coerceIn(0, totalSeconds)
-                }
-
-                val remaining = frozenSecondsDuringGuest
-                    ?: ((deadlineElapsed - now) / 1_000L).toInt().coerceIn(0, totalSeconds)
-
-                _state.update { it.copy(remainingSeconds = remaining) }
-                if (remaining <= 0) break
-
-                delay(250L)
+                startedAt = now
+                deadline = now + minutes * 60_000L
             }
-            onLoopComplete()
-        }
-
-        dialogueJob = viewModelScope.launch {
-            delay(500)
-            while (true) {
-                val line = dialogueLines.getOrElse(dialogueIndex % dialogueLines.size) { "" }
-                _state.update { it.copy(currentDialogueLine = line) }
-                dialogueIndex++
-                delay(25_000)
-            }
-        }
-
-        // pet hint at t=10s
-        viewModelScope.launch {
-            delay(10_000)
-            _state.update { it.copy(showPetHint = true) }
-            delay(5_000)
-            _state.update { it.copy(showPetHint = false) }
-        }
-
-        scheduleGuestVisit()
-    }
-
-    private fun scheduleGuestVisit() {
-        guestScheduleJob = viewModelScope.launch {
-            val totalBreaks = prefs.snapshotTotalBreaks()
-            if (totalBreaks < 3) return@launch
-            if (Random.nextFloat() > 0.15f) return@launch
-
-            val ownedIds = prefs.snapshotOwnedCatIds()
-            val bundleOwned = prefs.snapshotHasCafeBundle()
-            if (bundleOwned) return@launch
-
-            val candidates = catRegistry.premium().filter { cat ->
-                !cat.id.let { ownedIds.contains(it) } &&
-                    (System.currentTimeMillis() - prefs.getGuestVisitLastShown(cat.id)) > 7 * 86_400_000L
-            }
-            if (candidates.isEmpty()) return@launch
-
-            val guest = candidates.random()
-            val delayMs = (20_000L..40_000L).random()
-            delay(delayMs)
-
-            if (_state.value.breakState == BreakState.CompanionLoop) {
-                prefs.setGuestVisitLastShown(guest.id, System.currentTimeMillis())
-                _state.update { it.copy(breakState = BreakState.GuestVisit(guest)) }
-                delay(8_000)
-                if (_state.value.breakState is BreakState.GuestVisit) {
-                    _state.update { it.copy(breakState = BreakState.CompanionLoop) }
+            val restoredCat = cats.find(old?.takeIf { it.optString("id") == id }?.optString("cat")?.takeIf { it.isNotBlank() } ?: cat.id)
+            saved["session_id"] = id
+            prefs.setActiveBreak(JSONObject().put("id", id).put("deadline", deadline).put("boot", boot).put("started", startedAt).put("minutes", minutes).put("cat", restoredCat.id).toString())
+            if (!finished.get()) monitoring.visibleBreakId = id
+            _state.value = BreakUiState(cat = restoredCat, remainingSeconds = BreakTiming.remainingSeconds(deadline, now),
+                currentDialogueLine = CatVoiceProvider.getEntrance(cat.voiceBucket), showPetHint = true,
+                reduceMotion = prefs.reduceMotion.first(), sound = prefs.soundEnabled.first())
+            if (finished.get()) return@launch
+            timer = viewModelScope.launch {
+                val lines = CatVoiceProvider.getLoopLines(cat.voiceBucket)
+                var ticks = 0
+                while (isActive && !finished.get()) {
+                    val remaining = BreakTiming.remainingSeconds(deadline, SystemClock.elapsedRealtime())
+                    _state.update { it.copy(remainingSeconds = remaining) }
+                    if (remaining == 0) { complete("completed"); break }
+                    if (ticks++ % 100 == 99 && lines.isNotEmpty()) _state.update { it.copy(currentDialogueLine = lines[(ticks / 100) % lines.size]) }
+                    delay(250)
                 }
             }
         }
     }
-
-    fun dismissGuestVisit() {
-        _state.update { it.copy(breakState = BreakState.CompanionLoop) }
-    }
-
-    private fun onLoopComplete() {
-        timerJob?.cancel()
-        dialogueJob?.cancel()
-        guestScheduleJob?.cancel()
-        _state.update { it.copy(
-            breakState = BreakState.Outro,
-            currentDialogueLine = _state.value.cat?.voiceBucket?.let {
-                CatVoiceProvider.getGoodbye(it)
-            } ?: ""
-        )}
-    }
-
-    fun onOutroComplete() {
-        viewModelScope.launch {
-            prefs.incrementBreaksCompleted()
-            val cat = _state.value.cat
-            val summary = BreakSummary(
-                catName = cat?.displayName ?: "Miso",
-                durationMinutes = breakMinutes,
-                petCount = _state.value.sessionPetCount
-            )
+    fun onEntranceComplete() { _state.update { if (it.breakState == BreakState.Entrance) it.copy(breakState = BreakState.CompanionLoop) else it } }
+    fun onOutroComplete() = Unit // Media completion never controls the session outcome.
+    fun dismissGuestVisit() = Unit
+    fun skip() = complete("skipped")
+    fun interrupted() = complete("interrupted")
+    private fun complete(outcome: String) {
+        if (!started.get() || !finished.compareAndSet(false, true)) return
+        timer?.cancel()
+        // The transaction must survive Activity/ViewModel destruction (e.g. Back/Home).
+        persistenceScope.launch {
+            initialization?.join()
+            prefs.finishBreak(id, outcome, ((SystemClock.elapsedRealtime() - startedAt) / 1000).toInt().coerceIn(0, minutes * 60))
+            monitoring.visibleBreakId = null
             _state.update { it.copy(breakState = BreakState.Done) }
-            _finishEvent.emit(summary)
+            _finish.emit(BreakSummary(state.value.cat?.displayName ?: "Miso", minutes, state.value.sessionPetCount, outcome))
         }
     }
-
     fun onPetTapped() {
-        viewModelScope.launch {
-            _state.update { it.copy(sessionPetCount = it.sessionPetCount + 1) }
-            prefs.incrementPetsLifetime()
-        }
+        if (finished.get()) return
+        _state.update { it.copy(sessionPetCount = it.sessionPetCount + 1) }
+        viewModelScope.launch { prefs.incrementPetsLifetime() }
     }
-
-    private fun LongRange.random() = Random.nextLong(first, last + 1)
+    companion object { private val persistenceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO) }
 }
-
-data class BreakSummary(
-    val catName: String,
-    val durationMinutes: Int,
-    val petCount: Int
-)
+data class BreakSummary(val catName: String, val durationMinutes: Int, val petCount: Int, val outcome: String = "completed")

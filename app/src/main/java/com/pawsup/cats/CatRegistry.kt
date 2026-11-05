@@ -15,7 +15,7 @@ class CatRegistry @Inject constructor() {
         Cat("biscuit", "Biscuit", CatTier.PREMIUM, "#000000", Color.Black.toArgb(),       VoiceBucket.BISCUIT, "A cozy calico who reminds you to eat and breathe.",                "#E07A5F", 1.00f),
     )
 
-    fun find(id: String): Cat = all.first { it.id == id }
+    fun find(id: String): Cat = all.firstOrNull { it.id == id } ?: free()
     fun free(): Cat            = all.first { it.tier == CatTier.FREE }
     fun premium(): List<Cat>   = all.filter { it.tier == CatTier.PREMIUM }
 }

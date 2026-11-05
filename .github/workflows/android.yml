@@ -1,0 +1,30 @@
+name: Android checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - run: python3 scripts/check_source.py
+      - run: bash gradlew testDebugUnitTest testReleaseUnitTest lintDebug lintRelease assembleDebug assembleDebugAndroidTest bundleRelease processReleaseManifest --console=plain
+      - run: python3 scripts/check_permissions.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-checks
+          path: |
+            app/build/reports/
+            app/build/test-results/
+            app/build/outputs/apk/debug/
+            app/build/outputs/mapping/release/
