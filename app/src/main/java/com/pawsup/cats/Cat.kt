@@ -7,7 +7,7 @@ data class Cat(
     val backgroundColorHex: String,
     val keyColor: Int,
     val voiceBucket: VoiceBucket,
-    val personalityBlurb: String,
+    @androidx.annotation.StringRes val personalityBlurbRes: Int,
     val moodColorHex: String,
     val greetingPitchShift: Float = 1.0f
 )

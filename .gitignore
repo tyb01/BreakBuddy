@@ -9,3 +9,6 @@ keystore.properties
 *.keystore
 .idea/
 *.log
+
+__pycache__/
+*.pyc

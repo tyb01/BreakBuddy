@@ -16,14 +16,14 @@ object MonitoringAccess {
 
     fun start(context: Context, repo: MonitoringRepository? = null): Boolean {
         if (!hasUsage(context)) {
-            repo?.status?.value = "Usage access needed"
+            repo?.status?.value = context.getString(com.pawsup.R.string.ui_usage_access_needed_62ab34)
             return false
         }
         return try {
             ContextCompat.startForegroundService(context, Intent(context, MonitoringService::class.java))
             true
         } catch (_: RuntimeException) {
-            repo?.status?.value = "Monitoring unavailable. Open PawsUp to resume."
+            repo?.status?.value = context.getString(com.pawsup.R.string.ui_monitoring_unavailable_open_pawsup_to_resume_21b326)
             false
         }
     }

@@ -1,5 +1,6 @@
 package com.pawsup.break_experience.components
 
+import androidx.core.net.toUri
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
@@ -40,9 +41,9 @@ fun BreakVideoPlayer(
     val player = remember(catId) {
         ExoPlayer.Builder(context).build().apply {
             setMediaItems(listOf(
-                MediaItem.fromUri(Uri.parse("asset:///${CatAssetResolver.entranceVideo(catId)}")),
-                MediaItem.fromUri(Uri.parse("asset:///${CatAssetResolver.idleVideo(catId)}")),
-                MediaItem.fromUri(Uri.parse("asset:///${CatAssetResolver.outroVideo(catId)}"))
+                MediaItem.fromUri("asset:///${CatAssetResolver.entranceVideo(catId)}".toUri()),
+                MediaItem.fromUri("asset:///${CatAssetResolver.idleVideo(catId)}".toUri()),
+                MediaItem.fromUri("asset:///${CatAssetResolver.outroVideo(catId)}".toUri())
             ))
             repeatMode = Player.REPEAT_MODE_OFF
             volume = 0f

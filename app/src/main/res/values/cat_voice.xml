@@ -1,0 +1,157 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string-array name="voice_miso_loop">
+        <item>You smell tired. Just an observation.</item>
+        <item>I\'m not judging. (I am a little.)</item>
+        <item>Your thumb\'s been busy. Give it a minute.</item>
+        <item>Stay. The view from here is fine.</item>
+        <item>You\'re allowed to do nothing.</item>
+        <item>Hands down. Both of them.</item>
+        <item>I came all the way here, you know.</item>
+        <item>Look at me instead. I\'m better.</item>
+        <item>Breath in. Breath out. There you go.</item>
+        <item>Whatever it was, it\'ll still be there.</item>
+        <item>We don\'t have to talk. I prefer it actually.</item>
+        <item>Pet me if you\'re nervous. I\'ll allow it.</item>
+        <item>You\'re doing fine. Probably.</item>
+        <item>This is the cat appointment. Mandatory.</item>
+        <item>Soft moment. Don\'t ruin it.</item>
+        <item>Take up less space in your head.</item>
+        <item>I came to remind you you\'re a person.</item>
+        <item>Eyes off the rectangle for a second.</item>
+        <item>You didn\'t miss anything important.</item>
+        <item>We\'re just resting. That\'s the whole plan.</item>
+        <item>Slow down. I dare you.</item>
+        <item>Look out a window after this.</item>
+        <item>You blink less than you should.</item>
+        <item>I\'ll wait. I have nothing else on.</item>
+        <item>This is the part where you exhale.</item>
+        <item>I love you. Don\'t make it weird.</item>
+    </string-array>
+    <string-array name="voice_yuki_loop">
+        <item>Breathe with me. Slowly. Like this.</item>
+        <item>Have you had water today? Real water?</item>
+        <item>There\'s no rush. Truly.</item>
+        <item>I\'ll stay until you feel like yourself again.</item>
+        <item>Close your eyes for a moment. Just a moment.</item>
+        <item>You\'re allowed to slow down.</item>
+        <item>Whatever it is, it can wait for you.</item>
+        <item>I came because I missed you.</item>
+        <item>Soft breath in. Soft breath out.</item>
+        <item>I think you\'re doing your best.</item>
+        <item>Unclench your hands, darling.</item>
+        <item>We have all the time we need.</item>
+        <item>You looked tired. So I came.</item>
+        <item>Step away from your day for a minute.</item>
+        <item>Nothing urgent will happen in five minutes.</item>
+        <item>Your body is asking for stillness.</item>
+        <item>Slow your eyes. Look at one thing.</item>
+        <item>Tell yourself one kind thing.</item>
+        <item>Stretch your back when I leave.</item>
+        <item>You\'re loved. Just so you know.</item>
+        <item>Pet my fur. It\'ll help us both.</item>
+        <item>Sit a little longer with me.</item>
+        <item>There. That\'s better already.</item>
+        <item>You came back. That\'s enough.</item>
+        <item>Rest now. I\'m here.</item>
+    </string-array>
+    <string-array name="voice_mocha_loop">
+        <!-- Intentional excited character dialogue, not a duplicated translation. -->
+        <item tools:ignore="Typos">Okay okay okay sit sit sit.</item>
+        <item>I have so much to tell you. I forgot it.</item>
+        <item>Watch my tail. WATCH IT.</item>
+        <item>You smell like outside. Were you outside?</item>
+        <item>I just remembered something! Now I forgot.</item>
+        <item tools:ignore="Typos">Wiggle. Wiggle wiggle wiggle.</item>
+        <item>I\'m doing the loaf now. The loaf!</item>
+        <item>Pet me pet me pet me.</item>
+        <item>Hi again. Did you miss me? Of course.</item>
+        <item>I am very small but very important.</item>
+        <item>What are we doing? Are we doing it?</item>
+        <item>I love being here. I love being here.</item>
+        <item>Look at my paws! Tiny!</item>
+        <item>Boop. (I booped you.)</item>
+        <item>Are you my friend now? Yes? Yes.</item>
+        <item>I\'m purring. Can you hear it? Listen.</item>
+        <item>I will protect you from the air.</item>
+        <item>You have a nose. I have a nose too!</item>
+        <item>This is the best break. The best.</item>
+        <item>I can do a thing. Look. Watching?</item>
+        <item>Slow blink at you. Slow. Blink.</item>
+        <item>I\'m a tiny mighty cat. Mighty!</item>
+        <item tools:ignore="Typos">Stay stay stay. Five more minutes!</item>
+        <item>Are you having fun? I\'m having fun.</item>
+        <item>You found me! Well, I found you.</item>
+        <item>Best human. Confirmed. Best.</item>
+    </string-array>
+    <string-array name="voice_shadow_loop">
+        <item>Nothing important is happening on that feed.</item>
+        <item>Be where your paws are.</item>
+        <item>The mind that is not racing arrives sooner.</item>
+        <item>Stillness is a skill. You\'re practicing.</item>
+        <item>Notice your breath. Don\'t change it. Just notice.</item>
+        <item>The hurry is a story. It isn\'t true.</item>
+        <item>You are not what you scrolled.</item>
+        <item>Watch the air around your hands.</item>
+        <item>The world will continue without your attention.</item>
+        <item>Empty mind is full of room.</item>
+        <item>Soften the place behind your eyes.</item>
+        <item>The body knows. Ask it.</item>
+        <item>You don\'t owe the screen anything.</item>
+        <item>I sit. The room sits. You sit.</item>
+        <item>Time is wider than you think.</item>
+        <item>The wave passes. So does the urge.</item>
+        <item>Your thoughts are not your home.</item>
+        <item>Breath in: here. Breath out: now.</item>
+        <item>The cat does not check the clock.</item>
+        <item>What if you simply rest.</item>
+        <item>Stop looking. Start noticing.</item>
+        <item>The quiet has been waiting.</item>
+        <item>Where are your shoulders right now.</item>
+        <item>Even the river rests in pools.</item>
+        <item>You are enough without doing.</item>
+        <item>The eye that is rested sees better.</item>
+        <item>Listen past the noise.</item>
+        <item>Return to the breath. Return again.</item>
+        <item>Soft attention. Soft.</item>
+    </string-array>
+    <string-array name="voice_biscuit_loop">
+        <item>Let\'s pretend this is a tea break.</item>
+        <item>Stretch your back. I\'ll wait.</item>
+        <item>Have a snack after this. Promise me.</item>
+        <item>Your hands are tight. Open them.</item>
+        <item>Five minutes is a perfectly good amount.</item>
+        <item>You worked hard. I noticed.</item>
+        <item>Take up some space. Lean back.</item>
+        <item>Warm drink later? Yes, warm drink.</item>
+        <item>Soft is a feeling. Try some.</item>
+        <item>I made room. It\'s for you.</item>
+        <item>Has anyone told you you\'re doing fine?</item>
+        <item>Soup tonight, maybe. Just a thought.</item>
+        <item>Your eyes need a longer blink.</item>
+        <item>Roll your wrists. Both ways. There.</item>
+        <item>You\'re allowed to enjoy this.</item>
+        <item>I packed extra coziness. We can share.</item>
+        <item>Even cats nap. Don\'t fight it.</item>
+        <item>Step outside later. Just a little.</item>
+        <item>Tell your shoulders the day is done.</item>
+        <item>I\'m proud of you. Don\'t argue.</item>
+        <item>Want a snack? I want a snack.</item>
+        <item>Soft sweater energy. Match me.</item>
+        <item>The good news is: you can rest.</item>
+        <item>Five deep breaths before you go.</item>
+        <item>We made it to right now together.</item>
+        <item>Be gentle with the next hour.</item>
+        <item>I love your face. Just saying.</item>
+        <item>Cozy is a verb. Do it now.</item>
+    </string-array>
+    <string name="voice_miso_entrance">Hey. Came to sit with you.</string>
+    <string name="voice_yuki_entrance">There you are. Come rest a moment, sweetheart.</string>
+    <string name="voice_mocha_entrance">HI HI HI you\'re here!</string>
+    <string name="voice_shadow_entrance">The scroll is a river. Step out a moment.</string>
+    <string name="voice_biscuit_entrance">Oh good, you\'re here. Sit, sit.</string>
+    <string name="blurb_miso">Your warm, slightly judgmental roommate. Free, always.</string>
+    <string name="blurb_mocha">A Siamese kitten with way too much to say. Free, always.</string>
+    <string name="blurb_yuki">Soft, sleepy, maternal. She\'ll sit with you when you need calm.</string>
+    <string name="blurb_shadow">Mysterious, zen, slightly witchy. Drops wisdom and leaves.</string>
+    <string name="blurb_biscuit">A cozy calico who reminds you to eat and breathe.</string>
+</resources>

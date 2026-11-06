@@ -18,7 +18,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         versionCode = 6
         versionName = "1.0.5"
-        resourceConfigurations += listOf("en")
+
     }
 
     val signing = Properties().apply {
@@ -36,6 +36,7 @@ android {
     buildTypes {
         debug {
             isDebuggable = true
+            isPseudoLocalesEnabled = true
             applicationIdSuffix = ".debug"
         }
         release {
@@ -110,6 +111,8 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.12.01"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test:runner:1.6.2")
     testImplementation("junit:junit:4.13.2")
@@ -121,3 +124,10 @@ dependencies {
 kapt {
     correctErrorTypes = true
 }
+
+// Persist every resolved module version. Verification metadata additionally pins artifact bytes.
+dependencyLocking { lockAllConfigurations() }
+
+val verificationTools by configurations.creating
+ dependencies { add(verificationTools.name, "com.android.tools.build:aapt2:8.10.1-12782657:linux") }
+tasks.register("resolveVerificationTools") { doLast { verificationTools.resolve() } }

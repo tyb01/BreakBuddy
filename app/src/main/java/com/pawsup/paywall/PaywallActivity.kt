@@ -1,5 +1,7 @@
 package com.pawsup.paywall
 
+import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.os.Bundle
@@ -47,7 +49,7 @@ class PaywallActivity : ComponentActivity() {
 
                 if (state.purchaseSuccess) {
                     PurchaseSuccessScreen(
-                        catName = if (state.bundleSuccess) "the whole cafe" else state.cat?.displayName ?: "",
+                        catName = if (state.bundleSuccess) stringResource(com.pawsup.R.string.ui_the_whole_cafe_4eba98) else state.cat?.displayName ?: "",
                         onDone = { finish() }
                     )
                 } else {
@@ -72,7 +74,7 @@ class PaywallActivity : ComponentActivity() {
 }
 
 @Composable
-private fun PaywallScreen(
+fun PaywallScreen(
     state: PaywallUiState,
     onPeriodChange: (PricePeriod) -> Unit,
     onAdoptCat: () -> Unit,
@@ -118,7 +120,7 @@ private fun PaywallScreen(
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color(android.graphics.Color.parseColor(cat.moodColorHex)).copy(alpha = 0.6f)
+                                Color(cat.moodColorHex.toColorInt()).copy(alpha = 0.6f)
                             )
                         )
                     )
@@ -136,7 +138,7 @@ private fun PaywallScreen(
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = cat.personalityBlurb,
+                text = stringResource(cat.personalityBlurbRes),
                 fontSize = 18.sp,
                 fontStyle = FontStyle.Italic,
                 color = Color(0xFFF5ECD7).copy(alpha = 0.7f)
@@ -190,7 +192,7 @@ private fun PaywallScreen(
             TextButton(onClick = onRestore) { Text(stringResource(com.pawsup.R.string.production_restore_purchases_retry_extra)) }
             TextButton(onClick = {
                 runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse("https://play.google.com/store/account/subscriptions"))) }
+                    "https://play.google.com/store/account/subscriptions".toUri())) }
             }) { Text(stringResource(com.pawsup.R.string.production_manage_subscriptions_in_google_play)) }
             Text(stringResource(com.pawsup.R.string.production_subscriptions_renew_automatically_unless_cancelled_in_google_play), color = Color.White)
             // Dismiss

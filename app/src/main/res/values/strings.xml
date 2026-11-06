@@ -45,7 +45,4 @@
     <!-- Monitoring notification -->
 
     <!-- Guest visit -->
-    <string name="guest_visit_body">%1$s padded in for a moment, looked at you %2$s, and settled nearby. She\'ll come back if you adopt her.</string>
-    <string name="guest_visit_cta">Meet %1$s</string>
-    <string name="guest_visit_dismiss">Maybe later</string>
 </resources>

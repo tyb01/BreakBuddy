@@ -10,6 +10,9 @@ class UsageAccumulator(
 ) {
     var foregroundActivity: String? = null
     private var lastVisited: String? = foreground
+    val perAppMs: MutableMap<String, Long> = mutableMapOf()
+    var eligibleIntervals: ((Long, Long) -> List<Pair<Long, Long>>)? = null
+    var onUsage: ((Long, Long) -> Unit)? = null
     var selected: Set<String> = emptySet()
     var paused: Boolean = false
     var lastDeltaMs: Long = 0
@@ -19,8 +22,14 @@ class UsageAccumulator(
         lastDeltaMs = 0
         if (time <= cursor) return
         if (cursor > 0 && interactive && !paused && foreground in selected) {
-            lastDeltaMs = time - cursor
-            totalMs += lastDeltaMs
+            val intervals = eligibleIntervals?.invoke(cursor, time) ?: listOf(cursor to time)
+            for ((start, end) in intervals) {
+                val delta = (end - start).coerceAtLeast(0)
+                lastDeltaMs += delta
+                totalMs += delta
+                foreground?.let { perAppMs[it] = (perAppMs[it] ?: 0) + delta }
+                onUsage?.invoke(start, end)
+            }
         }
         cursor = time
     }
@@ -57,6 +66,13 @@ class UsageAccumulator(
         }
     }
 
-    fun resetBudget() { totalMs = 0 }
+    fun resetBudget() { totalMs = 0; perAppMs.clear() }
+    fun dueRule(globalEnabled: Boolean, globalMinutes: Int, overrides: Map<String, Int>): String? {
+        val app = foreground ?: return null
+        if (app !in selected) return null
+        val limit = overrides[app]
+        if (limit != null && (perAppMs[app] ?: 0) >= limit.coerceIn(1, 60) * 60_000L) return "app"
+        return if (globalEnabled && due(globalMinutes)) if (combined) "shared" else "visit" else null
+    }
     fun due(limitMinutes: Int) = totalMs >= limitMinutes.coerceIn(1, 60) * 60_000L
 }

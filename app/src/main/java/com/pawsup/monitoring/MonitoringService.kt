@@ -22,6 +22,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MonitoringService : Service() {
     @Inject lateinit var prefs: UserPreferences
+    @Inject lateinit var journal: com.pawsup.diagnostics.DiagnosticsJournal
     @Inject lateinit var repo: MonitoringRepository
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var engine = UsageAccumulator()
@@ -33,29 +34,32 @@ class MonitoringService : Service() {
     private var lastSaved = 0L
     private var activeId: String? = null
     private var queryCursor = 0L
+    private var historyGeneration = -1L
+    private val observations = mutableListOf<com.pawsup.productivity.ObservedInterval>()
     private val bootIdentity by lazy { BootIdentity.read(this) }
 
     override fun onCreate() {
         super.onCreate()
         if (Build.VERSION.SDK_INT >= 26) {
             getSystemService(NotificationManager::class.java).createNotificationChannel(
-                NotificationChannel(CHANNEL, "Monitoring and breaks", NotificationManager.IMPORTANCE_LOW))
+                NotificationChannel(CHANNEL, getString(com.pawsup.R.string.ui_monitoring_and_breaks_5a729e), NotificationManager.IMPORTANCE_LOW))
         }
         try {
             if (Build.VERSION.SDK_INT >= 34) startForeground(1001,
-                notification("Starting monitoring"), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-            else startForeground(1001, notification("Starting monitoring"))
+                notification(getString(com.pawsup.R.string.ui_starting_monitoring_6cc8fa)), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            else startForeground(1001, notification(getString(com.pawsup.R.string.ui_starting_monitoring_6cc8fa)))
         } catch (_: RuntimeException) {
-            repo.status.value = "Monitoring unavailable. Open PawsUp to resume."
+            repo.status.value = getString(com.pawsup.R.string.ui_monitoring_unavailable_open_pawsup_to_resume_21b326)
             stopSelf(); return
         }
         repo.isServiceRunning = true
+        journal.record(com.pawsup.diagnostics.DiagnosticCode.MONITOR_STARTED)
         scope.launch {
             restore()
             while (isActive) {
                 try { poll() }
                 catch (cancel: CancellationException) { throw cancel }
-                catch (_: Exception) { updateStatus("Monitoring error. Open PawsUp to retry.") }
+                catch (_: Exception) { journal.record(com.pawsup.diagnostics.DiagnosticCode.MONITOR_FAILED); updateStatus(getString(com.pawsup.R.string.ui_monitoring_error_open_pawsup_to_retry_869db4)) }
                 delay(2_000)
             }
         }
@@ -81,8 +85,10 @@ class MonitoringService : Service() {
                 engine = UsageAccumulator(json.getBoolean("combined"), json.getLong("total"),
                     json.optString("foreground").takeIf { it.isNotEmpty() }, json.getBoolean("interactive"), json.getLong("cursor"))
                 engine.foregroundActivity = json.optString("activity").takeIf { it.isNotEmpty() }
+                val appTimes = json.optJSONObject("appTimes") ?: JSONObject()
+                appTimes.keys().forEach { key -> engine.perAppMs[key] = appTimes.optLong(key).coerceAtLeast(0) }
                 queryCursor = saved
-            } else updateStatus("Resumed with an unmeasured gap")
+            } else updateStatus(getString(com.pawsup.R.string.ui_resumed_with_an_unmeasured_gap_b4cbd6))
         }
         prefs.activeBreak()?.let { raw ->
             runCatching {
@@ -100,16 +106,20 @@ class MonitoringService : Service() {
     private suspend fun poll() {
         if (!prefs.snapshotMonitorMeEnabled()) { stopSelf(); return }
         if (!MonitoringAccess.hasUsage(this)) {
-            updateStatus("Usage access needed"); stopSelf(); return
+            journal.record(com.pawsup.diagnostics.DiagnosticCode.USAGE_REVOKED)
+            updateStatus(getString(com.pawsup.R.string.ui_usage_access_needed_62ab34)); stopSelf(); return
         }
         val now = System.currentTimeMillis()
         val elapsed = SystemClock.elapsedRealtime()
         val drift = (now - lastWall) - (elapsed - lastElapsed)
         if (kotlin.math.abs(drift) > 1_000) {
+            journal.record(com.pawsup.diagnostics.DiagnosticCode.CLOCK_CHANGED)
             engine.cursor = elapsed; queryCursor = now; engine.foreground = null
-            updateStatus("Clock changed; waiting for an app visit")
+            updateStatus(getString(com.pawsup.R.string.ui_clock_changed_waiting_for_an_app_visit_0044dc))
         }
         lastWall = now; lastElapsed = elapsed
+        val currentGeneration = prefs.historyGeneration.first()
+        if (currentGeneration != historyGeneration) { observations.clear(); historyGeneration = currentGeneration }
         val combined = prefs.combinedUsage.first()
         if (engine.combined != combined) { engine.resetBudget(); engine.combined = combined }
         engine.selected = prefs.snapshotMonitoredPackages() - packageName
@@ -117,7 +127,21 @@ class MonitoringService : Service() {
         val unlocked = !getSystemService(KeyguardManager::class.java).isKeyguardLocked
         val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
         val quiet = QuietHours.contains(hour, prefs.quietStart.first(), prefs.quietEnd.first())
-        val paused = prefs.isSnoozed(elapsed, bootIdentity) || quiet
+        val schedule = prefs.focusSchedule.first()
+        val scheduleActive = schedule.allowsAt(now)
+        val snoozed = prefs.isSnoozed(elapsed, bootIdentity)
+        val paused = snoozed || quiet || !scheduleActive
+        val globalEnabled = prefs.globalBudgetEnabled.first()
+        val limits = prefs.appLimits.first()
+        engine.perAppMs.keys.retainAll(engine.selected)
+        val quietStart = prefs.quietStart.first(); val quietEnd = prefs.quietEnd.first()
+        engine.eligibleIntervals = { start, end ->
+            com.pawsup.productivity.CalendarEligibility.intervals(now + start - elapsed, now + end - elapsed, schedule, quietStart, quietEnd)
+                .map { (a, b) -> (elapsed + a - now) to (elapsed + b - now) }
+        }
+        engine.onUsage = { start, end ->
+            observations += com.pawsup.productivity.ObservedInterval(now + start - elapsed, now + end - elapsed, usageMs = end - start)
+        }
         var stored = prefs.activeBreak()?.let { runCatching { JSONObject(it) }.getOrNull() }
         // A live UI owns completion. A missing UI cannot leave monitoring paused forever.
         if (stored != null && repo.visibleBreakId != stored.optString("id") &&
@@ -133,11 +157,11 @@ class MonitoringService : Service() {
         if (activeId != null && storedId == null) {
             activeId = null; engine.resetBudget(); retryAfter = elapsed + 30_000
         }
-        engine.paused = paused || activeId != null
+        engine.paused = snoozed || activeId != null
         val events = getSystemService(UsageStatsManager::class.java).queryEvents(queryCursor, now)
         if (events == null) {
             engine.cursor = elapsed; engine.foreground = null; queryCursor = now
-            updateStatus("Usage data unavailable. Open PawsUp to check access.")
+            updateStatus(getString(com.pawsup.R.string.ui_usage_data_unavailable_open_pawsup_to_check_acce_6f21e2))
             return
         }
         val event = UsageEvents.Event()
@@ -163,27 +187,31 @@ class MonitoringService : Service() {
         if (power.isInteractive && unlocked && !engine.interactive) engine.screen(true, elapsed)
         repo.lastPollElapsed = elapsed
         if (pendingId != null && elapsed - pendingAt > 5_000) {
+            journal.record(com.pawsup.diagnostics.DiagnosticCode.PRESENTATION_UNCONFIRMED)
             pendingId = null; retryAfter = elapsed + 60_000
-            repo.status.value = "Break ready. Tap the notification to open it."
+            repo.status.value = getString(com.pawsup.R.string.ui_break_ready_tap_the_notification_to_open_it_2c0e59)
         }
         when {
-            engine.selected.isEmpty() -> updateStatus("Choose apps to monitor")
-            paused -> updateStatus(if (quiet) "Quiet hours" else "Paused temporarily")
-            activeId != null -> updateStatus("Break in progress")
-            !power.isInteractive || !unlocked -> updateStatus("Waiting for an unlocked screen")
-            engine.foreground !in engine.selected -> updateStatus("Waiting for a selected app")
-            engine.due(prefs.snapshotMaxMinutes()) && elapsed >= retryAfter && pendingId == null -> presentBreak(elapsed)
-            pendingId == null && elapsed >= retryAfter -> updateStatus("Monitoring selected apps")
+            engine.selected.isEmpty() -> updateStatus(getString(com.pawsup.R.string.ui_choose_apps_to_monitor_6cd99a))
+            paused -> updateStatus(if (quiet) getString(com.pawsup.R.string.ui_quiet_hours_706b24) else if (!scheduleActive) getString(com.pawsup.R.string.ui_outside_your_focus_schedule_d28c0f) else getString(com.pawsup.R.string.ui_paused_temporarily_6f4519))
+            activeId != null -> updateStatus(getString(com.pawsup.R.string.ui_break_in_progress_aa384b))
+            !power.isInteractive || !unlocked -> updateStatus(getString(com.pawsup.R.string.ui_waiting_for_an_unlocked_screen_2df9fc))
+            engine.foreground !in engine.selected -> updateStatus(getString(com.pawsup.R.string.ui_waiting_for_a_selected_app_110201))
+            engine.dueRule(globalEnabled, prefs.snapshotMaxMinutes(), limits) != null && elapsed >= retryAfter && pendingId == null ->
+                presentBreak(elapsed, engine.dueRule(globalEnabled, prefs.snapshotMaxMinutes(), limits)!!)
+            pendingId == null && elapsed >= retryAfter -> updateStatus(getString(com.pawsup.R.string.ui_monitoring_selected_apps_d7c276))
         }
         if (elapsed - lastSaved >= 5_000) {
-            prefs.checkpoint(JSONObject().put("cursor", engine.cursor).put("wallCursor", queryCursor).put("boot", bootIdentity)
+            prefs.saveObservation(JSONObject().put("cursor", engine.cursor).put("wallCursor", queryCursor).put("boot", bootIdentity)
                 .put("total", engine.totalMs).put("foreground", engine.foreground ?: "").put("activity", engine.foregroundActivity ?: "")
-                .put("interactive", engine.interactive).put("combined", engine.combined).toString())
+                .put("interactive", engine.interactive).put("combined", engine.combined).put("appTimes", JSONObject(engine.perAppMs as Map<*, *>)).toString(), observations.toList(), historyGeneration)
+            observations.clear()
             lastSaved = elapsed
         }
     }
 
-    private suspend fun presentBreak(elapsed: Long) {
+    private suspend fun presentBreak(elapsed: Long, rule: String) {
+        journal.record(com.pawsup.diagnostics.DiagnosticCode.PRESENTATION_REQUESTED)
         val id = UUID.randomUUID().toString()
         val requested = prefs.snapshotActiveCatId()
         val fresh = com.pawsup.billing.EntitlementPolicy.canUseCache(prefs.entitlementsLastSynced.first(), System.currentTimeMillis())
@@ -193,14 +221,15 @@ class MonitoringService : Service() {
             .putExtra(BreakOverlayActivity.EXTRA_CAT_ID, cat)
             .putExtra(BreakOverlayActivity.EXTRA_BREAK_MINUTES, prefs.snapshotBreakMinutes())
             .putExtra("session_id", id)
+            .putExtra("trigger_rule", rule)
         val pending = PendingIntent.getActivity(this, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        getSystemService(NotificationManager::class.java).notify(1001, notification("Time for a break. Tap to start.", pending))
+        getSystemService(NotificationManager::class.java).notify(1001, notification(getString(com.pawsup.R.string.ui_time_for_a_break_tap_to_start_91f8eb), pending))
         retryAfter = elapsed + 60_000
         if (Settings.canDrawOverlays(this)) {
             pendingId = id; pendingAt = elapsed
             try { startActivity(intent) } catch (_: RuntimeException) { pendingId = null }
         }
-        repo.status.value = "Break ready. Tap the notification if it does not appear."
+        repo.status.value = getString(com.pawsup.R.string.ui_break_ready_tap_the_notification_if_it_does_not__6a5036)
     }
 
     private fun updateStatus(value: String) {
@@ -217,13 +246,14 @@ class MonitoringService : Service() {
         return NotificationCompat.Builder(this, CHANNEL).setSmallIcon(R.drawable.ic_launcher_cat)
             .setContentTitle("PawsUp").setContentText(message).setContentIntent(open).setOngoing(true)
             .setSilent(true).setPriority(NotificationCompat.PRIORITY_LOW)
-            .addAction(0, "Pause 15 min", action(ACTION_SNOOZE, 3))
+            .addAction(0, getString(com.pawsup.R.string.ui_pause_15_min_b28d39), action(ACTION_SNOOZE, 3))
             .addAction(0, "Stop", action(ACTION_STOP, 4)).build()
     }
     override fun onBind(intent: Intent?): IBinder? = null
     override fun onDestroy() {
         repo.isServiceRunning = false
-        if (repo.status.value != "Usage access needed") repo.status.value = "Monitoring stopped. Open PawsUp to resume."
+        journal.record(com.pawsup.diagnostics.DiagnosticCode.MONITOR_STOPPED)
+        if (repo.status.value != getString(com.pawsup.R.string.ui_usage_access_needed_62ab34)) repo.status.value = getString(com.pawsup.R.string.ui_monitoring_stopped_open_pawsup_to_resume_96b217)
         scope.cancel(); super.onDestroy()
     }
     companion object {

@@ -1,0 +1,30 @@
+<resources>
+    <string name="productivity_title">Budgets and feedback</string>
+    <string name="global_budget">Use the shared / per-visit limit above</string>
+    <string name="budget_rules_help">App-specific limits accumulate across visits until a break starts. The first reached rule requests one break. Pause, quiet hours and focus schedules take priority.</string>
+    <string name="app_budget">Separate limit for %1$s</string>
+    <string name="app_budget_minutes">%1$s limit (minutes)</string>
+    <string name="no_budget_rules">No budget rule is enabled. Usage can still be measured, but no automatic break will be requested.</string>
+    <string name="focus_schedule">Use a work / study schedule</string>
+    <string name="schedule_help">Use local time. Overnight windows belong to their starting weekday. Equal start/end times mean the entire selected day. Manual pause and quiet hours still apply; Resume does not override them.</string>
+    <string name="schedule_start_label">Start time</string>
+    <string name="schedule_end_label">End time</string>
+    <string name="schedule_time_value">%1$s: %2$s</string>
+    <string name="schedule_no_days">Select at least one day to allow scheduled monitoring.</string>
+    <string name="summary_today">Today</string>
+    <string name="summary_week">Last 7 calendar days</string>
+    <string name="summary_empty">No measurements recorded in this period.</string>
+    <string name="summary_usage">Selected-app usage: %1$.1f min</string>
+    <string name="summary_break">Recorded break time: %1$.1f min</string>
+    <string name="summary_outcomes">Completed: %1$d ? Ended early: %2$d ? Interrupted: %3$d</string>
+    <string name="summary_limitations">Only observed intervals are included. Missing monitoring time is unknown. Break time is not proof of attention, productivity, or time saved. Daily totals are kept locally for 35 recorded days; deleting history removes them.</string>
+    <string name="diagnostics_help">Diagnostics contain up to 100 timestamps and fixed status codes. They exclude app selections, usage totals, purchase tokens and exception text. Export only if you want to save a support file.</string>
+    <string name="diagnostics_export">Save diagnostic report</string>
+    <string name="diagnostics_delete">Delete diagnostics</string>
+    <string name="diagnostics_saved">Diagnostic report saved.</string>
+    <string name="diagnostics_failed">The report could not be saved.</string>
+    <string name="trigger_app">This app reached its separate usage limit.</string>
+    <string name="trigger_shared">Your selected apps reached the shared usage limit.</string>
+    <string name="trigger_visit">This visit reached its usage limit.</string>
+    <string name="trigger_manual">You started this break.</string>
+</resources>

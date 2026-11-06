@@ -1,5 +1,6 @@
 package com.pawsup.onboarding
 
+import androidx.core.net.toUri
 import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
@@ -90,7 +91,7 @@ class OnboardingActivity : ComponentActivity() {
                         runCatching { act.startActivity(
                             Intent(
                                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                Uri.parse("package:${act.packageName}")
+                                "package:${act.packageName}".toUri()
                             )
                         ) }
                     },
@@ -226,7 +227,7 @@ private fun WelcomeStep(misoCat: com.pawsup.cats.Cat, onNext: () -> Unit) {
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = "2 minutes to set up",
+                    text = stringResource(com.pawsup.R.string.ui_2_minutes_to_set_up_5ad56f),
                     color = Color(0xFFE8A87C),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
@@ -259,7 +260,7 @@ private fun WelcomeStep(misoCat: com.pawsup.cats.Cat, onNext: () -> Unit) {
             )
         ) {
             Text(
-                text = "Let's go",
+                text = stringResource(com.pawsup.R.string.ui_let_s_go_b9a2ff),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -334,14 +335,14 @@ private fun PermissionsStep(
         Spacer(Modifier.height(64.dp))
 
         Text(
-            "Almost there",
+            stringResource(com.pawsup.R.string.ui_almost_there_005287),
             fontFamily = CrimsonTextFamily,
             fontSize = 32.sp,
             color = Color(0xFFF5ECD7)
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            "Usage access is required. Notifications and automatic break display are optional.",
+            stringResource(com.pawsup.R.string.ui_usage_access_is_required_notifications_and_autom_50b8d6),
             color = Color(0xFFF5ECD7).copy(0.65f),
             fontSize = 15.sp,
             textAlign = TextAlign.Center
@@ -439,14 +440,14 @@ private fun UsageAccessGuideScreen(
         // Back
         Box(modifier = Modifier.fillMaxWidth()) {
             TextButton(onClick = onBack) {
-                Text("← Back", color = Color(0xFFF5ECD7).copy(0.5f), fontSize = 14.sp)
+                Text(stringResource(com.pawsup.R.string.ui_back_c32ae9), color = Color(0xFFF5ECD7).copy(0.5f), fontSize = 14.sp)
             }
         }
 
         Spacer(Modifier.height(16.dp))
 
         Text(
-            text = "Granting Usage Access",
+            text = stringResource(com.pawsup.R.string.ui_granting_usage_access_07b071),
             fontFamily = CrimsonTextFamily,
             fontSize = 30.sp,
             color = Color(0xFFF5ECD7),
@@ -454,7 +455,7 @@ private fun UsageAccessGuideScreen(
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Follow these three steps after tapping the button below.",
+            text = stringResource(com.pawsup.R.string.ui_follow_these_three_steps_after_tapping_the_butto_c32e2e),
             color = Color(0xFFF5ECD7).copy(0.6f),
             fontSize = 15.sp,
             textAlign = TextAlign.Center
@@ -465,22 +466,22 @@ private fun UsageAccessGuideScreen(
         // Looping step cards — each highlights in sequence
         GuideStepCard(
             number   = "1",
-            title    = "Open Usage Access settings",
-            subtitle = "Tap the button at the bottom of this screen.",
+            title    = stringResource(com.pawsup.R.string.ui_open_usage_access_settings_b51376),
+            subtitle = stringResource(com.pawsup.R.string.ui_tap_the_button_at_the_bottom_of_this_screen_40f872),
             active   = activeStep == 0
         )
         Spacer(Modifier.height(12.dp))
         GuideStepCard(
             number   = "2",
-            title    = "Find PawsUp in the list",
-            subtitle = "Scroll until you see PawsUp and tap it.",
+            title    = stringResource(com.pawsup.R.string.ui_find_pawsup_in_the_list_b0d8c0),
+            subtitle = stringResource(com.pawsup.R.string.ui_scroll_until_you_see_pawsup_and_tap_it_7fcb2b),
             active   = activeStep == 1
         )
         Spacer(Modifier.height(12.dp))
         GuideStepCard(
             number   = "3",
-            title    = "Turn on Usage Access",
-            subtitle = "Tap the toggle to enable it, then come back here.",
+            title    = stringResource(com.pawsup.R.string.ui_turn_on_usage_access_c14d1b),
+            subtitle = stringResource(com.pawsup.R.string.ui_tap_the_toggle_to_enable_it_then_come_back_here_036d9f),
             active   = activeStep == 2
         )
 
@@ -497,7 +498,7 @@ private fun UsageAccessGuideScreen(
                 contentColor   = Color(0xFF1A0C00)
             )
         ) {
-            Text("Open Usage Access Settings", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(com.pawsup.R.string.ui_open_usage_access_settings_8788da), fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
 
         Spacer(Modifier.height(48.dp))
@@ -543,14 +544,14 @@ private fun OverlayPermissionGuideScreen(
 
         Box(modifier = Modifier.fillMaxWidth()) {
             TextButton(onClick = onBack) {
-                Text("← Back", color = Color(0xFFF5ECD7).copy(0.5f), fontSize = 14.sp)
+                Text(stringResource(com.pawsup.R.string.ui_back_c32ae9), color = Color(0xFFF5ECD7).copy(0.5f), fontSize = 14.sp)
             }
         }
 
         Spacer(Modifier.height(16.dp))
 
         Text(
-            text = "Enabling Display Over Apps",
+            text = stringResource(com.pawsup.R.string.ui_enabling_display_over_apps_d128bb),
             fontFamily = CrimsonTextFamily,
             fontSize = 30.sp,
             color = Color(0xFFF5ECD7),
@@ -558,7 +559,7 @@ private fun OverlayPermissionGuideScreen(
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Follow these steps after tapping the button below.",
+            text = stringResource(com.pawsup.R.string.ui_follow_these_steps_after_tapping_the_button_belo_6adeb4),
             color = Color(0xFFF5ECD7).copy(0.6f),
             fontSize = 15.sp,
             textAlign = TextAlign.Center
@@ -568,22 +569,22 @@ private fun OverlayPermissionGuideScreen(
 
         GuideStepCard(
             number   = "1",
-            title    = "Open Display over other apps",
-            subtitle = "Tap the button at the bottom of this screen.",
+            title    = stringResource(com.pawsup.R.string.ui_open_display_over_other_apps_466b33),
+            subtitle = stringResource(com.pawsup.R.string.ui_tap_the_button_at_the_bottom_of_this_screen_40f872),
             active   = activeStep == 0
         )
         Spacer(Modifier.height(12.dp))
         GuideStepCard(
             number   = "2",
-            title    = "Find PawsUp in the list",
-            subtitle = "Scroll down until you see PawsUp and tap it.",
+            title    = stringResource(com.pawsup.R.string.ui_find_pawsup_in_the_list_b0d8c0),
+            subtitle = stringResource(com.pawsup.R.string.ui_scroll_down_until_you_see_pawsup_and_tap_it_426aba),
             active   = activeStep == 1
         )
         Spacer(Modifier.height(12.dp))
         GuideStepCard(
             number   = "3",
-            title    = "Allow display over other apps",
-            subtitle = "Tap the toggle to enable it, then come back here.",
+            title    = stringResource(com.pawsup.R.string.ui_allow_display_over_other_apps_b1453e),
+            subtitle = stringResource(com.pawsup.R.string.ui_tap_the_toggle_to_enable_it_then_come_back_here_036d9f),
             active   = activeStep == 2
         )
 
@@ -600,7 +601,7 @@ private fun OverlayPermissionGuideScreen(
                 contentColor   = Color(0xFF1A0C00)
             )
         ) {
-            Text("Open Display Over Apps Settings", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(com.pawsup.R.string.ui_open_display_over_apps_settings_c88bcf), fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
 
         Spacer(Modifier.height(48.dp))

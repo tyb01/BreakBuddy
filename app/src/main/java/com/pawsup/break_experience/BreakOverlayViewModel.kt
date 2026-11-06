@@ -39,6 +39,7 @@ class BreakOverlayViewModel @Inject constructor(
     private var timer: Job? = null
     private var initialization: Job? = null
     private var startedAt = 0L
+    private var startedWall = 0L
 
     fun onEntranceStarted(cat: Cat) {
         if (!started.compareAndSet(false, true)) return
@@ -54,6 +55,7 @@ class BreakOverlayViewModel @Inject constructor(
             if (old != null && BreakTiming.canRestore(old.getLong("boot"), boot, old.getLong("deadline"), now)) {
                 id = old.getString("id"); deadline = old.getLong("deadline")
                 minutes = old.optInt("minutes", minutes).coerceIn(1, 30)
+                startedWall = old.optLong("startedWall", 0)
                 startedAt = old.optLong("started", deadline - minutes * 60_000L)
             } else {
                 old?.let {
@@ -65,18 +67,19 @@ class BreakOverlayViewModel @Inject constructor(
                     }
                 }
                 startedAt = now
+                startedWall = System.currentTimeMillis()
                 deadline = now + minutes * 60_000L
             }
             val restoredCat = cats.find(old?.takeIf { it.optString("id") == id }?.optString("cat")?.takeIf { it.isNotBlank() } ?: cat.id)
             saved["session_id"] = id
-            prefs.setActiveBreak(JSONObject().put("id", id).put("deadline", deadline).put("boot", boot).put("started", startedAt).put("minutes", minutes).put("cat", restoredCat.id).toString())
+            prefs.setActiveBreak(JSONObject().put("id", id).put("deadline", deadline).put("boot", boot).put("started", startedAt).put("startedWall", startedWall).put("minutes", minutes).put("cat", restoredCat.id).toString())
             if (!finished.get()) monitoring.visibleBreakId = id
             _state.value = BreakUiState(cat = restoredCat, remainingSeconds = BreakTiming.remainingSeconds(deadline, now),
-                currentDialogueLine = CatVoiceProvider.getEntrance(cat.voiceBucket), showPetHint = true,
+                currentDialogueLine = CatVoiceProvider.getEntrance(context, restoredCat.voiceBucket), showPetHint = true,
                 reduceMotion = prefs.reduceMotion.first(), sound = prefs.soundEnabled.first())
             if (finished.get()) return@launch
             timer = viewModelScope.launch {
-                val lines = CatVoiceProvider.getLoopLines(cat.voiceBucket)
+                val lines = CatVoiceProvider.getLoopLines(context, restoredCat.voiceBucket)
                 var ticks = 0
                 while (isActive && !finished.get()) {
                     val remaining = BreakTiming.remainingSeconds(deadline, SystemClock.elapsedRealtime())
@@ -99,7 +102,10 @@ class BreakOverlayViewModel @Inject constructor(
         // The transaction must survive Activity/ViewModel destruction (e.g. Back/Home).
         persistenceScope.launch {
             initialization?.join()
-            prefs.finishBreak(id, outcome, ((SystemClock.elapsedRealtime() - startedAt) / 1000).toInt().coerceIn(0, minutes * 60))
+            val measured = SystemClock.elapsedRealtime() - startedAt
+            val calendarKnown = startedWall > 0 && kotlin.math.abs(System.currentTimeMillis() - startedWall - measured) <= 5_000
+            val seconds = if (calendarKnown) (measured / 1000).toInt().coerceIn(0, minutes * 60) else 0
+            prefs.finishBreak(id, outcome, seconds, startedWall.takeIf { calendarKnown })
             monitoring.visibleBreakId = null
             _state.update { it.copy(breakState = BreakState.Done) }
             _finish.emit(BreakSummary(state.value.cat?.displayName ?: "Miso", minutes, state.value.sessionPetCount, outcome))

@@ -44,7 +44,7 @@ class BreakOverlayActivity : ComponentActivity() {
             val displayedCat = state.cat ?: cat
             LaunchedEffect(Unit) {
                 vm.finishEvent.collect { summary ->
-                    if (summary.outcome == "completed") android.widget.Toast.makeText(this@BreakOverlayActivity, "Break completed with ${summary.catName}.", android.widget.Toast.LENGTH_LONG).show()
+                    if (summary.outcome == "completed") android.widget.Toast.makeText(this@BreakOverlayActivity, getString(com.pawsup.R.string.break_completed_with, summary.catName), android.widget.Toast.LENGTH_LONG).show()
                     finish()
                 }
             }
@@ -57,10 +57,16 @@ class BreakOverlayActivity : ComponentActivity() {
                     Column(Modifier.align(Alignment.TopCenter).padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(state.currentDialogueLine, style = MaterialTheme.typography.titleLarge)
                         BreakTimerDisplay(state.remainingSeconds)
+                        Text(stringResource(when (intent.getStringExtra("trigger_rule")) {
+                            "app" -> com.pawsup.R.string.trigger_app
+                            "shared" -> com.pawsup.R.string.trigger_shared
+                            "visit" -> com.pawsup.R.string.trigger_visit
+                            else -> com.pawsup.R.string.trigger_manual
+                        }))
                         Text(stringResource(com.pawsup.R.string.production_you_can_turn_off_your_screen_and_rest_leaving_for_another_app_end))
                     }
                     Column(Modifier.align(Alignment.BottomCenter).padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Button(onClick = { vm.onPetTapped(); if (state.sound) playPurr() }) { Text("Pet ${displayedCat.displayName}") }
+                        Button(onClick = { vm.onPetTapped(); if (state.sound) playPurr() }) { Text(stringResource(com.pawsup.R.string.pet_cat, displayedCat.displayName)) }
                         TextButton(onClick = vm::skip) { Text(stringResource(com.pawsup.R.string.production_end_break_early)) }
                     }
                 }
