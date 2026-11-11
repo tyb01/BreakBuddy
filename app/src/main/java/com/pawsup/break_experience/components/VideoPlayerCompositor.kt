@@ -1,5 +1,6 @@
 package com.pawsup.break_experience.components
 
+import androidx.core.net.toUri
 import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
@@ -75,7 +76,7 @@ private fun rememberExoPlayer(
     loop: Boolean
 ): ExoPlayer = remember(assetPath) {
     ExoPlayer.Builder(context).build().apply {
-        val uri = Uri.parse("asset:///$assetPath")
+        val uri = "asset:///$assetPath".toUri()
         setMediaItem(MediaItem.fromUri(uri))
         repeatMode = if (loop) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
         volume = 0f

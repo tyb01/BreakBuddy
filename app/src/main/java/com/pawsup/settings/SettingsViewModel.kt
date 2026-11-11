@@ -80,7 +80,7 @@ class SettingsViewModel @Inject constructor(
     fun setMonitorMe(enabled: Boolean, context: android.content.Context) {
         viewModelScope.launch {
             if (enabled && prefs.snapshotMonitoredPackages().isEmpty()) {
-                monitoring.status.value = "Choose apps before starting monitoring."
+                monitoring.status.value = context.getString(com.pawsup.R.string.ui_choose_apps_before_starting_monitoring_ec57d3)
                 return@launch
             }
             prefs.setMonitorMeEnabled(enabled)
@@ -97,7 +97,7 @@ class SettingsViewModel @Inject constructor(
         while (true) {
             val stale = monitoring.isServiceRunning && monitoring.lastPollElapsed > 0 &&
                 android.os.SystemClock.elapsedRealtime() - monitoring.lastPollElapsed > 10_000
-            emit(if (stale) "Monitoring status is stale. Stop and resume to retry." else monitoring.status.value)
+            emit(if (stale) context.getString(com.pawsup.R.string.ui_monitoring_status_is_stale_stop_and_resume_to_re_ae9847) else monitoring.status.value)
             kotlinx.coroutines.delay(1_000)
         }
     }

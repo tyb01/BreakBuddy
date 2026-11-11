@@ -116,7 +116,7 @@ fun chromaKeyBitmap(
         )
     }
 
-    val result = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+    val result = androidx.core.graphics.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
     result.setPixels(pixels, 0, w, 0, 0, w, h)
     return result
 }

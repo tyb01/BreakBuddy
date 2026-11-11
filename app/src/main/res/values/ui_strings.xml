@@ -1,0 +1,85 @@
+<resources>
+    <string name="ui_2_minutes_to_set_up_5ad56f">2 minutes to set up</string>
+    <string name="ui_allow_display_over_other_apps_b1453e">Allow display over other apps</string>
+    <string name="ui_almost_there_005287">Almost there</string>
+    <string name="ui_an_existing_subscription_covers_or_overlaps_this_d0d717">An existing subscription covers or overlaps this purchase. Manage it in Google Play first.</string>
+    <string name="ui_back_c32ae9">← Back</string>
+    <string name="ui_break_in_progress_aa384b">Break in progress</string>
+    <string name="ui_break_ready_tap_the_notification_if_it_does_not__6a5036">Break ready. Tap the notification if it does not appear.</string>
+    <string name="ui_break_ready_tap_the_notification_to_open_it_2c0e59">Break ready. Tap the notification to open it.</string>
+    <string name="ui_cafe_37efa8">Cafe</string>
+    <string name="ui_checking_monitoring_status_beadb9">Checking monitoring status?</string>
+    <string name="ui_choose_apps_before_starting_monitoring_ec57d3">Choose apps before starting monitoring.</string>
+    <string name="ui_choose_apps_to_monitor_6cd99a">Choose apps to monitor</string>
+    <string name="ui_clock_changed_waiting_for_an_app_visit_0044dc">Clock changed; waiting for an app visit</string>
+    <string name="ui_connecting_to_google_play_0bd7a3">Connecting to Google Play?</string>
+    <string name="ui_delete_break_history_2a5001">Delete break history?</string>
+    <string name="ui_disconnected_from_google_play_your_last_purchase_7ceb7e">Disconnected from Google Play. Your last purchase check is retained.</string>
+    <string name="ui_each_continuous_app_visit_starts_a_new_timer_27af19">Each continuous app visit starts a new timer.</string>
+    <string name="ui_enabling_display_over_apps_d128bb">Enabling Display Over Apps</string>
+    <string name="ui_find_pawsup_in_the_list_b0d8c0">Find PawsUp in the list</string>
+    <string name="ui_follow_these_steps_after_tapping_the_button_belo_6adeb4">Follow these steps after tapping the button below.</string>
+    <string name="ui_follow_these_three_steps_after_tapping_the_butto_c32e2e">Follow these three steps after tapping the button below.</string>
+    <string name="ui_google_play_is_not_connected_e66da5">Google Play is not connected.</string>
+    <string name="ui_google_play_unavailable_check_your_connection_an_823a23">Google Play unavailable. Check your connection and retry.</string>
+    <string name="ui_granting_usage_access_07b071">Granting Usage Access</string>
+    <string name="ui_home_70f8bb">Home</string>
+    <string name="ui_let_s_go_b9a2ff">Let\'s go</string>
+    <string name="ui_monitoring_and_breaks_5a729e">Monitoring and breaks</string>
+    <string name="ui_monitoring_error_open_pawsup_to_retry_869db4">Monitoring error. Open PawsUp to retry.</string>
+    <string name="ui_monitoring_needs_to_be_started_643fc9">Monitoring needs to be started</string>
+    <string name="ui_monitoring_selected_apps_d7c276">Monitoring selected apps</string>
+    <string name="ui_monitoring_status_is_stale_stop_and_resume_to_re_ae9847">Monitoring status is stale. Stop and resume to retry.</string>
+    <string name="ui_monitoring_stopped_open_pawsup_to_resume_96b217">Monitoring stopped. Open PawsUp to resume.</string>
+    <string name="ui_monitoring_unavailable_open_pawsup_to_resume_21b326">Monitoring unavailable. Open PawsUp to resume.</string>
+    <string name="ui_open_display_over_apps_settings_c88bcf">Open Display Over Apps Settings</string>
+    <string name="ui_open_display_over_other_apps_466b33">Open Display over other apps</string>
+    <string name="ui_open_usage_access_settings_8788da">Open Usage Access Settings</string>
+    <string name="ui_open_usage_access_settings_b51376">Open Usage Access settings</string>
+    <string name="ui_outside_your_focus_schedule_d28c0f">Outside your focus schedule</string>
+    <string name="ui_pause_15_min_b28d39">Pause 15 min</string>
+    <string name="ui_paused_temporarily_6f4519">Paused temporarily</string>
+    <string name="ui_payment_pending_access_unlocks_when_google_play__864c4f">Payment pending. Access unlocks when Google Play confirms payment.</string>
+    <string name="ui_payment_pending_google_play_must_confirm_payment_a48ef4">Payment pending. Google Play must confirm payment before access unlocks.</string>
+    <string name="ui_purchase_cancelled_you_have_not_unlocked_this_su_92f149">Purchase cancelled. You have not unlocked this subscription.</string>
+    <string name="ui_purchase_check_failed_cached_access_is_retained_488a27">Purchase check failed. Cached access is retained.</string>
+    <string name="ui_purchase_confirmation_needs_a_retry_reopen_pawsu_401a2c">Purchase confirmation needs a retry. Reopen PawsUp while online.</string>
+    <string name="ui_purchase_unavailable_please_retry_in_google_play_4e30f0">Purchase unavailable. Please retry in Google Play.</string>
+    <string name="ui_purchases_checked_with_google_play_2b12b4">Purchases checked with Google Play.</string>
+    <string name="ui_quiet_hours_706b24">Quiet hours</string>
+    <string name="ui_reliability_6780c7">Reliability</string>
+    <string name="ui_reset_pawsup_c13071">Reset PawsUp?</string>
+    <string name="ui_resumed_with_an_unmeasured_gap_b4cbd6">Resumed with an unmeasured gap</string>
+    <string name="ui_scroll_down_until_you_see_pawsup_and_tap_it_426aba">Scroll down until you see PawsUp and tap it.</string>
+    <string name="ui_scroll_until_you_see_pawsup_and_tap_it_7fcb2b">Scroll until you see PawsUp and tap it.</string>
+    <string name="ui_selected_9a976f">Selected</string>
+    <string name="ui_starting_monitoring_6cc8fa">Starting monitoring</string>
+    <string name="ui_switching_between_selected_apps_keeps_the_same_b_0e6a5a">Switching between selected apps keeps the same budget.</string>
+    <string name="ui_tap_the_button_at_the_bottom_of_this_screen_40f872">Tap the button at the bottom of this screen.</string>
+    <string name="ui_tap_the_toggle_to_enable_it_then_come_back_here_036d9f">Tap the toggle to enable it, then come back here.</string>
+    <string name="ui_the_whole_cafe_4eba98">the whole cafe</string>
+    <string name="ui_this_settings_page_is_not_available_on_your_devi_91248a">This settings page is not available on your device.</string>
+    <string name="ui_time_for_a_break_tap_to_start_91f8eb">Time for a break. Tap to start.</string>
+    <string name="ui_turn_on_usage_access_c14d1b">Turn on Usage Access</string>
+    <string name="ui_unable_to_check_google_play_try_again_6de63f">Unable to check Google Play. Try again.</string>
+    <string name="ui_unable_to_open_google_play_purchase_screen_retry_f9dad0">Unable to open Google Play purchase screen. Retry when connected.</string>
+    <string name="ui_unavailable_2c9c1f">Unavailable</string>
+    <string name="ui_usage_access_is_required_notifications_and_autom_50b8d6">Usage access is required. Notifications and automatic break display are optional.</string>
+    <string name="ui_usage_access_needed_62ab34">Usage access needed</string>
+    <string name="ui_usage_data_unavailable_open_pawsup_to_check_acce_6f21e2">Usage data unavailable. Open PawsUp to check access.</string>
+    <string name="ui_use_this_cat_63630d">Use this cat</string>
+    <string name="ui_view_subscription_493c3e">View subscription</string>
+    <string name="ui_waiting_for_a_selected_app_110201">Waiting for a selected app</string>
+    <string name="ui_waiting_for_an_unlocked_screen_2df9fc">Waiting for an unlocked screen</string>
+    <string name="price_then">; then </string>
+    <string name="period_month">month</string><string name="period_year">year</string><string name="period_week">week</string><string name="period_day">day</string>
+    <plurals name="price_cycles"><item quantity="one"> for %1$d billing period</item><item quantity="other"> for %1$d billing periods</item></plurals>
+    <string name="price_renews"> (auto-renews)</string><string name="price_phase">%1$s / %2$s%3$s</string>
+    <plurals name="choose_apps"><item quantity="one">Choose apps (%1$d selected)</item><item quantity="other">Choose apps (%1$d selected)</item></plurals>
+    <string name="usage_granted">Usage access: Granted</string><string name="usage_needed">Usage access: Needed</string>
+    <string name="overlay_allowed">Automatic break display: Allowed</string><string name="overlay_off">Automatic break display: Off; use notifications to open breaks</string>
+    <string name="notifications_allowed">Notifications: Allowed. Tap reminders to open breaks.</string><string name="notifications_off">Notifications: Off. Notification reminders need notifications enabled.</string>
+    <string name="control_value">%1$s: %2$d</string><string name="history_entry">%1$s: %2$s</string>
+    <string name="outcome_completed">Completed</string><string name="outcome_skipped">Ended early</string><string name="outcome_interrupted">Interrupted</string>
+    <string name="break_completed_with">Break completed with %1$s.</string><string name="pet_cat">Pet %1$s</string>
+</resources>

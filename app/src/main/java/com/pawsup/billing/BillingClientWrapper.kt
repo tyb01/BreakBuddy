@@ -25,7 +25,7 @@ sealed class PurchaseQuery {
 }
 
 @Singleton
-class BillingClientWrapper @Inject constructor(@ApplicationContext private val context: Context) : PurchasesUpdatedListener {
+class BillingClientWrapper @Inject constructor(@ApplicationContext private val context: Context, private val journal: com.pawsup.diagnostics.DiagnosticsJournal) : PurchasesUpdatedListener {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val mutex = Mutex()
     private var connecting = false
@@ -33,7 +33,7 @@ class BillingClientWrapper @Inject constructor(@ApplicationContext private val c
     val events = _events.asSharedFlow()
     val products = MutableStateFlow<Map<String, ProductDetails>>(emptyMap())
     val purchases = MutableStateFlow<PurchaseQuery>(PurchaseQuery.Loading)
-    val message = MutableStateFlow("Connecting to Google Play...")
+    val message = MutableStateFlow(context.getString(com.pawsup.R.string.ui_connecting_to_google_play_0bd7a3))
     val productDetails: Map<String, ProductDetails> get() = products.value
     val client = BillingClient.newBuilder(context).setListener(this)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().enablePrepaidPlans().build())
@@ -48,15 +48,15 @@ class BillingClientWrapper @Inject constructor(@ApplicationContext private val c
             override fun onBillingSetupFinished(result: BillingResult) {
                 connecting = false
                 if (result.responseCode == BillingClient.BillingResponseCode.OK) scope.launch { refreshReady() }
-                else fail("Google Play unavailable. Check your connection and retry.")
+                else fail(context.getString(com.pawsup.R.string.ui_google_play_unavailable_check_your_connection_an_823a23))
             }
             override fun onBillingServiceDisconnected() {
                 connecting = false
-                fail("Disconnected from Google Play. Your last purchase check is retained.")
+                fail(context.getString(com.pawsup.R.string.ui_disconnected_from_google_play_your_last_purchase_7ceb7e))
             }
         })
     }
-    private fun fail(text: String) { message.value = text; purchases.value = PurchaseQuery.Failure(text) }
+    private fun fail(text: String) { journal.record(com.pawsup.diagnostics.DiagnosticCode.BILLING_UNAVAILABLE); message.value = text; purchases.value = PurchaseQuery.Failure(text) }
     private suspend fun refreshReady() = mutex.withLock {
         try {
             val ids = ProductIds.PER_CAT.values.map { it.productId } + ProductIds.CAFE_PRODUCT
@@ -73,24 +73,25 @@ class BillingClientWrapper @Inject constructor(@ApplicationContext private val c
             else products.value = emptyMap()
             queryPurchases()
         } catch (e: CancellationException) { throw e }
-        catch (_: Exception) { fail("Unable to check Google Play. Try again.") }
+        catch (_: Exception) { fail(context.getString(com.pawsup.R.string.ui_unable_to_check_google_play_try_again_6de63f)) }
     }
     suspend fun queryPurchases(): PurchaseQuery {
-        if (!client.isReady) return PurchaseQuery.Failure("Google Play is not connected.").also { purchases.value = it }
+        if (!client.isReady) return PurchaseQuery.Failure(context.getString(com.pawsup.R.string.ui_google_play_is_not_connected_e66da5)).also { purchases.value = it }
         val result = suspendCancellableCoroutine<Pair<BillingResult, List<Purchase>>> { continuation ->
             client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()) { response, list ->
                 if (continuation.isActive) continuation.resume(response to list)
             }
         }
         if (result.first.responseCode != BillingClient.BillingResponseCode.OK) {
-            val failure = PurchaseQuery.Failure("Purchase check failed. Cached access is retained.")
+            val failure = PurchaseQuery.Failure(context.getString(com.pawsup.R.string.ui_purchase_check_failed_cached_access_is_retained_488a27))
             purchases.value = failure; message.value = failure.message; return failure
         }
         val valid = result.second.filter { it.packageName == context.packageName }
+        journal.record(com.pawsup.diagnostics.DiagnosticCode.BILLING_CHECKED)
         val success = PurchaseQuery.Success(valid)
         purchases.value = success
         message.value = if (valid.any { it.purchaseState == Purchase.PurchaseState.PENDING })
-            "Payment pending. Access unlocks when Google Play confirms payment." else "Purchases checked with Google Play."
+            context.getString(com.pawsup.R.string.ui_payment_pending_access_unlocks_when_google_play__864c4f) else context.getString(com.pawsup.R.string.ui_purchases_checked_with_google_play_2b12b4)
         valid.filter { it.purchaseState == Purchase.PurchaseState.PURCHASED && !it.isAcknowledged }.forEach { purchase ->
             scope.launch {
                 repeat(3) { attempt ->
@@ -102,7 +103,8 @@ class BillingClientWrapper @Inject constructor(@ApplicationContext private val c
                     if (response.responseCode == BillingClient.BillingResponseCode.OK) return@launch
                     delay((attempt + 1) * 2_000L)
                 }
-                message.value = "Purchase confirmation needs a retry. Reopen PawsUp while online."
+                journal.record(com.pawsup.diagnostics.DiagnosticCode.ACK_RETRY_EXHAUSTED)
+                message.value = context.getString(com.pawsup.R.string.ui_purchase_confirmation_needs_a_retry_reopen_pawsu_401a2c)
             }
         }
         return success
@@ -118,13 +120,13 @@ class BillingClientWrapper @Inject constructor(@ApplicationContext private val c
         val existing = (purchases.value as? PurchaseQuery.Success)?.purchases ?: return false
         if (existing.any { it.purchaseState != Purchase.PurchaseState.UNSPECIFIED_STATE &&
                 (productId in it.products || ProductIds.CAFE_PRODUCT in it.products || productId == ProductIds.CAFE_PRODUCT) }) {
-            message.value = "An existing subscription covers or overlaps this purchase. Manage it in Google Play first."
+            message.value = context.getString(com.pawsup.R.string.ui_an_existing_subscription_covers_or_overlaps_this_d0d717)
             return false
         }
         val params = BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(
             BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).setOfferToken(offer.offerToken).build())).build()
         val result = client.launchBillingFlow(activity, params)
-        if (result.responseCode != BillingClient.BillingResponseCode.OK) message.value = "Unable to open Google Play purchase screen. Retry when connected."
+        if (result.responseCode != BillingClient.BillingResponseCode.OK) message.value = context.getString(com.pawsup.R.string.ui_unable_to_open_google_play_purchase_screen_retry_f9dad0)
         return result.responseCode == BillingClient.BillingResponseCode.OK
     }
     override fun onPurchasesUpdated(result: BillingResult, updated: List<Purchase>?) {
@@ -139,7 +141,7 @@ class BillingClientWrapper @Inject constructor(@ApplicationContext private val c
                     }
                 }
                 BillingClient.BillingResponseCode.USER_CANCELED -> _events.emit(BillingEvent.UserCancelled)
-                else -> _events.emit(BillingEvent.Error(result.responseCode, "Purchase unavailable. Please retry in Google Play."))
+                else -> _events.emit(BillingEvent.Error(result.responseCode, context.getString(com.pawsup.R.string.ui_purchase_unavailable_please_retry_in_google_play_4e30f0)))
             }
         }
     }

@@ -18,13 +18,13 @@ enum class PricePeriod { MONTHLY, YEARLY }
 data class PaywallUiState(
     val cat: Cat? = null,
     val period: PricePeriod = PricePeriod.YEARLY,
-    val catPrice: String = "Unavailable",
-    val cafePrice: String = "Unavailable",
+    val catPrice: String = "",
+    val cafePrice: String = "",
     val catAvailable: Boolean = false,
     val cafeAvailable: Boolean = false,
     val purchaseSuccess: Boolean = false,
     val bundleSuccess: Boolean = false,
-    val message: String = "Connecting to Google Play...",
+    val message: String = "",
     val isLoading: Boolean = false
 )
 
@@ -33,6 +33,7 @@ class PaywallViewModel @Inject constructor(
     catRegistry: CatRegistry,
     private val billingClient: BillingClientWrapper,
     private val billingRepo: BillingRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
     savedState: SavedStateHandle
 ) : ViewModel() {
     private val catId: String = savedState[PaywallActivity.EXTRA_CAT_ID] ?: "yuki"
@@ -58,8 +59,8 @@ class PaywallViewModel @Inject constructor(
         viewModelScope.launch {
             billingClient.events.collect { event ->
                 _state.update { it.copy(isLoading = false, message = when (event) {
-                    is BillingEvent.Pending -> "Payment pending. Google Play must confirm payment before access unlocks."
-                    is BillingEvent.UserCancelled -> "Purchase cancelled. You have not unlocked this subscription."
+                    is BillingEvent.Pending -> context.getString(com.pawsup.R.string.ui_payment_pending_google_play_must_confirm_payment_a48ef4)
+                    is BillingEvent.UserCancelled -> context.getString(com.pawsup.R.string.ui_purchase_cancelled_you_have_not_unlocked_this_su_92f149)
                     is BillingEvent.Error -> event.message
                     else -> it.message
                 }) }
@@ -74,8 +75,8 @@ class PaywallViewModel @Inject constructor(
         val catOffer = perCat?.let { billingClient.offer(it.productId, if (monthly) it.monthlyPlan else it.yearlyPlan) }
         val cafeOffer = billingClient.offer(ProductIds.CAFE_PRODUCT, if (monthly) ProductIds.CAFE_MONTHLY else ProductIds.CAFE_YEARLY)
         val ready = billingClient.purchases.value is PurchaseQuery.Success
-        _state.update { it.copy(catPrice = catOffer?.description() ?: "Unavailable",
-            cafePrice = cafeOffer?.description() ?: "Unavailable",
+        _state.update { it.copy(catPrice = catOffer?.description() ?: context.getString(com.pawsup.R.string.ui_unavailable_2c9c1f),
+            cafePrice = cafeOffer?.description() ?: context.getString(com.pawsup.R.string.ui_unavailable_2c9c1f),
             catAvailable = ready && catOffer != null, cafeAvailable = ready && cafeOffer != null) }
     }
     fun adoptCat(activity: Activity) {
@@ -91,12 +92,16 @@ class PaywallViewModel @Inject constructor(
         _state.update { it.copy(isLoading = launched, message = billingClient.message.value) }
     }
     private fun ProductDetails.SubscriptionOfferDetails.description(): String =
-        pricingPhases.pricingPhaseList.joinToString("; then ") { phase ->
+        pricingPhases.pricingPhaseList.joinToString(context.getString(com.pawsup.R.string.price_then)) { phase ->
             val period = when (phase.billingPeriod) {
-                "P1M" -> "month"; "P1Y" -> "year"; "P1W" -> "week"; "P1D" -> "day"
+                "P1M" -> context.getString(com.pawsup.R.string.period_month)
+                "P1Y" -> context.getString(com.pawsup.R.string.period_year)
+                "P1W" -> context.getString(com.pawsup.R.string.period_week)
+                "P1D" -> context.getString(com.pawsup.R.string.period_day)
                 else -> phase.billingPeriod
             }
-            val duration = if (phase.billingCycleCount > 0) " for ${phase.billingCycleCount} billing period(s)" else " (auto-renews)"
-            "${phase.formattedPrice} / $period$duration"
+            val duration = if (phase.billingCycleCount > 0) context.resources.getQuantityString(com.pawsup.R.plurals.price_cycles, phase.billingCycleCount, phase.billingCycleCount)
+                else context.getString(com.pawsup.R.string.price_renews)
+            context.getString(com.pawsup.R.string.price_phase, phase.formattedPrice, period, duration)
         }
 }
